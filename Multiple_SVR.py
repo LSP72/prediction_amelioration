@@ -43,23 +43,11 @@ output_dir = r'/Users/mathildetardif/Library/CloudStorage/OneDrive-UniversitedeM
 # The output data will be in the order of all pre intervention files and then all post intervention files. 
 # Since the folder only contains Pre data so we are gonna have the pre data only. 
 
-if model == 'SVM':
-    
-    all_data, MCID = data_preprocessing.kin_var_fct(file_directory = file_directory, 
+all_data = data_preprocessing.kin_var_fct(file_directory = file_directory, 
                                          output_dir = output_dir,
                                          separate_legs = True,
-                                         nb_participants = nb_participants,
-                                         model = model, 
-                                         MCID_thr = 0.1)
-elif model == 'SVR':
-    all_data, MCID, VIT_PRE, VIT_POST = data_preprocessing.kin_var_fct(directory = file_directory, 
-                                         output_dir = output_dir,
-                                         separate_legs = True,
-                                         nb_participants = nb_participants,
-                                         model = model, 
-                                         MCID_thr = None)
-else:
-    print("Model not recognised: select either 'SVM' or 'SVR'.")
+                                         nb_participants = nb_participants)
+
 
 # --------------- Feature analysis ---------------
 
