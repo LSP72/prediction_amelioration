@@ -76,7 +76,6 @@ def kin_var_fct(file_directory, output_dir, separate_legs, nb_participants):
     # ----- Add Label -----
     demo_var.drop(['delta'], axis = 1, inplace= True)
     demo_var.drop(['Patient', 'masse', 'taille', 'sex','Diagnostique'], axis = 1, inplace= True) #This line excludes some of the features that are in the demographic excel file.
-    demo_var.drop(['delta'], axis = 1, inplace= True)
     all_data = pd.concat((all_data, demo_var), axis=1)
     
     return all_data
