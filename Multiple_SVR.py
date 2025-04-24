@@ -14,9 +14,9 @@ from sklearn.metrics import roc_auc_score
 from scipy.stats import skewtest, kurtosistest
 import sys
 import shap
-sys.path.append('/Users/mathildetardif/Library/CloudStorage/OneDrive-UniversitedeMontreal/Mathilde Tardif - PhD - Biomarkers CP/PhD projects/Training responders/MyScripts/Functions/')
+sys.path.append('/Users/mathildetardif/Documents/Python/Biomarkers/prediction_amelioration/functions/')
 import MyfeaturExtractor, featureSelection
-import data_preprocessing, interface
+import data_preprocessing_matrix, interface
 from imblearn.over_sampling import SMOTE # Synthetic Minority Oversampling TEchnique
                                          # Use to address imbalanced datasets for classification tasks (like here) => oversample the minority class by creating synth sample
 
@@ -43,11 +43,10 @@ output_dir = r'/Users/mathildetardif/Library/CloudStorage/OneDrive-UniversitedeM
 # The output data will be in the order of all pre intervention files and then all post intervention files. 
 # Since the folder only contains Pre data so we are gonna have the pre data only. 
 
-all_data = data_preprocessing.kin_var_fct(file_directory = file_directory, 
+all_data = data_preprocessing_matrix.kin_var_fct(file_directory = file_directory, 
                                          output_dir = output_dir,
                                          separate_legs = True,
                                          nb_participants = nb_participants)
-
 
 # --------------- Feature analysis ---------------
 
