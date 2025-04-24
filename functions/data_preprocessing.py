@@ -20,7 +20,7 @@ import MyfeaturExtractor, featureSelection
 # ** /!\ ATTENTION à l'ordre R/L (dans les autres fonctitons R PUIS L, donc doit être dans le même sens dans le Excel !) **
 
 
-def kin_var_fct(file_directory, output_dir, separate_legs, nb_participants, model, MCID_thr):
+def kin_var_fct(file_directory, output_dir, separate_legs, nb_participants):
     measurements = ['pctSimpleAppuie', 'distFoulee', 'vitCadencePasParMinute']
     joint_names = ['Hip', 'Knee', 'Ankle']
     side = ['Right', 'Left']
@@ -74,48 +74,9 @@ def kin_var_fct(file_directory, output_dir, separate_legs, nb_participants, mode
     # demo_var = demo_var.loc[demo_var.index.repeat(2)].reset_index(drop=True)
     
     # ----- Add Label -----
-    label_prep = demo_var[['GMFCS','delta']]
-    MCID = []   # Minimally Clinical Important Difference # What defines Responders from Non-Responders
-    
-    for i in range(len(label_prep['GMFCS'])):
-    
-        if label_prep['delta'][i] >= MCID_thr:  # no need to distinguish the classes as they all have the same MCID for speed
-                                                  # only looking at if delta in speed is greater than/equal to the MCID
-            MCID.append(1)
-        else:
-            MCID.append(0)
-    # responders = MCID.count(1)
-    # non_responders = MCID.count(0)
-    # print("Responders: %d" %responders)
-    # print("Non responders: %d" %non_responders)
-    
-    MCID = pd.Series(MCID)
     demo_var.drop(['delta'], axis = 1, inplace= True)
+    demo_var.drop(['Patient', 'masse', 'taille', 'sex','Diagnostique'], axis = 1, inplace= True) #This line excludes some of the features that are in the demographic excel file.
+    demo_var.drop(['delta'], axis = 1, inplace= True)
+    all_data = pd.concat((all_data, demo_var), axis=1)
     
-    if model == 'SVM':
-        demo_var.drop(['Patient', 'masse', 'taille', 'sex','Diagnostique', 'VIT_PRE', 'VIT_POST'], axis = 1, inplace= True) #This line excludes some of the features that are in the demographic excel file
-        all_data = pd.concat((all_data, demo_var), axis=1)
-        
-        return all_data, MCID
-        
-    elif model == 'SVR':
-        VIT_PRE = demo_var['VIT_PRE']
-        VIT_POST = demo_var['VIT_POST']
-        demo_var.drop(['Patient', 'masse', 'taille', 'sex','Diagnostique', 'VIT_POST'], axis = 1, inplace= True) #This line excludes some of the features that are in the demographic excel file.
-        demo_var.drop(['delta'], axis = 1, inplace= True)
-        all_data = pd.concat((all_data, demo_var), axis=1)
-        
-        return all_data, MCID, VIT_PRE, VIT_POST
-    
-    else:
-        return("Model not recognised: select either 'SVM' or 'SVR'.")
-    
-    
-def test_function():
-    x = 5
-    y = 10
-    breakpoint()  # The program will pause here
-    z = x + y  # This won't execute until you resume
-    print(z)
-
-test_function()
+    return all_data
