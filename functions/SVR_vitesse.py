@@ -25,7 +25,7 @@ def prediction_vitesse(all_data):
     # from this matrix can be extracted the labels (i.e., VIT_POST)
     
     VIT_POST = all_data['VIT_POST']
-    all_data.drop(['VIT_POST'], axis = 1, inplace = True)
+    data = all_data.drop(['VIT_POST'], axis = 1)
     
     # --------------- Feature analysis ---------------
 
@@ -33,19 +33,19 @@ def prediction_vitesse(all_data):
     # ----- Check the normality of features -----
     # print('¨***************')
     # print('Checking the normality of the features for speed')
-    # sktst = skewtest(all_data.values)
+    # sktst = skewtest(data.values)
     # print("Skewness values:\n", sktst.statistic)
     # print("Skewness test p-values:\n ", sktst.pvalue)
-    # kurtst = kurtosistest(all_data.values)
+    # kurtst = kurtosistest(data.values)
     # print("Kurtosis values:\n", kurtst.statistic)
     # print("Kurtosis test p-values:\n", kurtst.pvalue)
     
     # abnormally_distributed_indx = [-2 > x or x > 2 for x in sktst.statistic]
-    # abnormal_data_columns = [all_data.columns[i] for i in range(len(abnormally_distributed_indx)) if abnormally_distributed_indx[i]]
+    # abnormal_data_columns = [data.columns[i] for i in range(len(abnormally_distributed_indx)) if abnormally_distributed_indx[i]]
     # abnormal_data = all_data[abnormal_data_columns]
     # transformer = PowerTransformer(method='yeo-johnson')
     # transformed_data = transformer.fit_transform(abnormal_data.values)
-    # all_data[abnormal_data_columns] = transformed_data
+    # data[abnormal_data_columns] = transformed_data
 
     # --------------- ML algorithm: Support Vector Regresson (SVR) ---------------
     # ----- Selecting features based on earlier choisice for now may be by PCA then ------
@@ -53,7 +53,7 @@ def prediction_vitesse(all_data):
     features = pd.read_excel(r'/Users/mathildetardif/Documents/Python/Biomarkers/responder_prediction/functions/Features.xlsx')
     selectedFeatures = features['18']
     selectedFeatures = selectedFeatures.dropna()
-    selected_data_df = all_data[selectedFeatures]
+    selected_data_df = data[selectedFeatures]
     selected_data = selected_data_df.values
     
     # ----- Train / test split -----
@@ -80,7 +80,7 @@ def prediction_vitesse(all_data):
     # ----- ML -----
     # Finding an optimised ALPHA w/ Bayesian Optim
  
-    errors = []
+    errors = {}
     BP = {}
     SVR_acc = {} 
  
@@ -90,21 +90,20 @@ def prediction_vitesse(all_data):
                 'degree': (2,5),
                 'epsilon': (0.01, 1)
                 }
-     
     kernels = ['linear', 'poly', 'rbf', 'sigmoid']
     
     for kernel in kernels:
         
         def svr_model(C, gamma, degree, epsilon):
             SVR = svm.SVR(kernel=kernel, C=C, gamma=gamma, degree=int(degree), epsilon=epsilon)
-            cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=72)
+            cv = KFold(n_splits=5, shuffle=True, random_state=32)
             scores = cross_val_score(SVR, x_train_scaled, y_train_scaled, cv=cv, scoring = 'neg_mean_squared_error')
             return scores.mean()
         
         print('************************************')
         print('Bayesian Optimization initiated for', kernel, '.')
         
-        optimizer = BayesianOptimization(f = svr_model, pbounds = pbounds,                random_state=72, verbose=3)
+        optimizer = BayesianOptimization(f = svr_model, pbounds = pbounds,                random_state=42, verbose=3)
                                   # the objve f° #a dict specifiG range for each param #for reprodY   #ctrls amount of info displayed 
         optimizer.maximize(init_points=10, n_iter=100) # For 10 features accuracy:91
         best_parameters = optimizer.max['params']
@@ -124,7 +123,7 @@ def prediction_vitesse(all_data):
         
         # Evalutation of the model on the test set
         mse = mean_squared_error(y_test, y_hat_rev)
-        errors.append({kernel: mse})
+        errors[kernel] = np.sqrt(mse)
         # r2_train = r2_score(y_train, y_hat_train)
         r2 = r2_score(y_test, y_hat_rev)
         SVR_acc[kernel] = r2
@@ -149,3 +148,32 @@ def prediction_vitesse(all_data):
     BP['RMSE'] = errors
     
     return BP
+
+
+# ----- Finding the best model and its hyperparams -----
+def best_model(BP):
+    kernels = ['linear', 'poly', 'rbf', 'sigmoid']
+    best_R = BP['R^2 score']['linear']
+    best_rmse = BP['RMSE']['linear']
+    w_best_R = 'linear'
+    w_best_rmse = 'linear'
+    
+    for kernel in kernels[1:]:
+        if BP['R^2 score'][kernel] > best_R:
+            best_R = BP['R^2 score'][kernel]
+            w_best_R = kernel
+        if BP['RMSE'][kernel] < best_rmse:
+            best_rmse = BP['RMSE'][kernel]
+            w_best_rmse = kernel
+    
+    if w_best_R == w_best_rmse:
+        print('The best model is with a', w_best_R, 'kernel.')
+        return(BP.loc['rbf'])
+    else:
+        print('Lowest rmse does not match with highest R^2 score')
+        print('rmse:', w_best_rmse, best_rmse)
+        print('R^2:', w_best_R, best_R)
+        
+# ----- Utilising the model to predict one -----
+def using_svr(X_pp, all_data):    
+    
