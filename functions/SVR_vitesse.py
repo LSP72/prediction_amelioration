@@ -168,7 +168,7 @@ def best_model(BP):
             w_best_rmse = kernel
     
     if w_best_R == w_best_rmse:
-        print('The best model is with a', w_best_R, 'kernel.')
+        print('The best model is found with a', w_best_R, 'kernel.')
         return(BP.loc['rbf'])
     else:
         print('Lowest rmse does not match with highest R^2 score')
@@ -186,10 +186,12 @@ def prediction_vitesse(X_pp, all_data):
     selectedFeatures = selectedFeatures.dropna()
     selected_data_df = data[selectedFeatures]
     selected_data = selected_data_df.values
+    selected_X_pp = X_pp[selectedFeatures]
+    
     # ----- Scaling the data -----
     scaler_x = StandardScaler()
     scaler_y = StandardScaler()
-    data_scaled = scaler_x.fit_transform(data) # standardise/normalise the data based in the input by calculatG mean & SD of x_train & then, stdise x_train
+    data_scaled = scaler_x.fit_transform(selected_data) # standardise/normalise the data based in the input by calculatG mean & SD of x_train & then, stdise x_train
     VIT_POST_scaled = scaler_y.fit_transform(VIT_POST.array.reshape(-1,1))
 
     # Creating the model
@@ -197,7 +199,7 @@ def prediction_vitesse(X_pp, all_data):
     best_parameters = best_model(BP)
     SVR_best = svm.SVR(kernel=best_parameters.name, C=float(best_parameters['C']), gamma=best_parameters['gamma'], degree=int(best_parameters['degree']), epsilon=float(best_parameters['epsilon']))
     # Training the model
-    SVR_best.fit(data, VIT_POST)
+    SVR_best.fit(data_scaled, VIT_POST_scaled)
     # Predicting on the subject's data (X_pp)
     y_hat = SVR_best.predict(X_pp)
     # Reversing because data has been scaled
