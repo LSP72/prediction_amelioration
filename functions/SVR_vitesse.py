@@ -140,8 +140,12 @@ def prediction_vitesse(all_data):
         plt.title(f"True and predicted speed for {kernel}")
         plt.show()
         
-
-def using_SVR(X_pp):
+    # Creating a readable matrix with all the info
+    BP = pd.DataFrame(BP).T
+    params = BP['params'].apply(pd.Series)
+    BP = pd.concat([BP[['target']], params], axis=1)
+    BP['degree'] =  BP['degree'].apply(lambda x : int(x))
+    BP['accuracy'] = SVR_acc
+    BP['RMSE'] = errors
     
-         
-         
+    return BP
