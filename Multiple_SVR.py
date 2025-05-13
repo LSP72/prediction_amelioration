@@ -113,50 +113,49 @@ x_train, y_train = smote_train.fit_resample(x_train, y_train) # resample the dat
 # ----- Bayesian Optimization -----
 # Method to find the best paramaters for a model (minG/maxG an objve f°)
 
-# pbounds = {
-#             'C': (1,1000),
-#             'gamma': (0.001, 1),
-#             'degree': (2,5),
-#             'kernel_idx':(0,3)
-#             }
-# kernels = ['linear', 'poly', 'rbf', 'sigmoid']
+pbounds = {
+            'C': (1,1000),
+            'gamma': (0.001, 1),
+            'degree': (2,5),
+            'kernel_idx':(0,3)
+            }
+kernels = ['linear', 'poly', 'rbf', 'sigmoid']
 
-# errors = []
-# BP = {}
-# SVM_acc = {} 
+errors = []
+BP = {}
+SVM_acc = {} 
 
-# def svm_model(C, gamma, degree, kernel_idx):
-#     kernel = kernels[int(round(kernel_idx))]
-#     SVM = svm.SVC(kernel=kernel, C=C, gamma=gamma, degree=int(degree), random_state=42)
+def svm_model(C, gamma, degree, kernel_idx):
+    kernel = kernels[int(round(kernel_idx))]
+    SVM = svm.SVC(kernel=kernel, C=C, gamma=gamma, degree=int(degree), random_state=42)
     
-#     cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
-#     # cv_LOO = LeaveOneOut()
-#     acc = cross_val_score(SVM, x_train, y_train, cv=cv, scoring = 'accuracy')
-#     return acc.mean()
+    cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+    # cv_LOO = LeaveOneOut()
+    acc = cross_val_score(SVM, x_train, y_train, cv=cv, scoring = 'accuracy')
+    return acc.mean()
     
-# print('************************************')
-# print('Bayesian Optimization initiated.')
+print('************************************')
+print('Bayesian Optimization initiated.')
 
-# optimizer = BayesianOptimization(f = svm_model, pbounds = pbounds,                random_state=42, verbose=3)
-#                           # the objve f° #a dict specifiG range for each param #for reprodY   #ctrls amount of info displayed 
-# optimizer.fit(x_train, y_train)
-# optimizer.maximize(init_points=10, n_iter=100) # For 10 features accuracy:91
-# results = pd.DataFrame(optimizer.res)
+optimizer = BayesianOptimization(f = svm_model, pbounds = pbounds,                random_state=42, verbose=3)
+                          # the objve f° #a dict specifiG range for each param #for reprodY   #ctrls amount of info displayed 
+optimizer.maximize(init_points=10, n_iter=100) # For 10 features accuracy:91
+results = pd.DataFrame(optimizer.res)
 
-param_grid = {
-    'C' :(1,1000),
-    'gamma': (0.001, 1),
-    'degree': (2,5),
-    'kernel' : ['linear', 'poly', 'rbf', 'sigmoid']
-    }
-from sklearn.model_selection import GridSearchCV
-from sklearn.svm import SVC
-svm = SVC()
-grid_search = GridSearchCV(svm, param_grid, cv=5, scoring='accuracy', n_jobs=-1, verbose=1)
-grid_search.fit(x_train, y_train)
-best_svm = grid_search.best_estimator
-print("Best Parameters:", grid_search.best_params_)
-print("Best Score:", grid_search.best_score_)
+# param_grid = {
+#     'C' :(1,1000),
+#     'gamma': (0.001, 1),
+#     'degree': (2,5),
+#     'kernel' : ['linear', 'poly', 'rbf', 'sigmoid']
+#     }
+# from sklearn.model_selection import GridSearchCV
+# from sklearn.svm import SVC
+# svm = SVC()
+# grid_search = GridSearchCV(svm, param_grid, cv=5, scoring='accuracy', n_jobs=-1, verbose=1)
+# grid_search.fit(x_train, y_train)
+# best_svm = grid_search.best_estimator
+# print("Best Parameters:", grid_search.best_params_)
+# print("Best Score:", grid_search.best_score_)
 
 # best_parameters = optimizer.max['params']
 # best_parameters['C'] = float(best_parameters['C'])
