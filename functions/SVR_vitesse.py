@@ -20,7 +20,7 @@ from sklearn.metrics import accuracy_score
 from sklearn import metrics, svm
 import sys
 
-def prediction_vitesse(all_data):
+def finding_models(all_data):
     # 'all_data' is a big matrix with all features in columns and all sample in rows
     # from this matrix can be extracted the labels (i.e., VIT_POST)
     
@@ -175,5 +175,14 @@ def best_model(BP):
         print('R^2:', w_best_R, best_R)
         
 # ----- Utilising the model to predict one -----
-def using_svr(X_pp, all_data):    
+def prediction_vitesse(X_pp, all_data):    
+    BP = finding_models(all_data)
+    best_parameters = best_model()
+    SVR_best = svm.SVR(kernel=kernel, C=float(best_parameters['C']), gamma=best_parameters['gamma'], degree=int(best_parameters['degree']), epsilon=float(best_parameters['epsilon']))
+    SVR_best.fit(x_train_scaled, y_train_scaled)
+    
+    y_hat = SVR_best.predict(x_test_scaled)
+    # Reversing because data has been scaled
+    y_hat_rev = scaler_y.inverse_transform(y_hat.reshape(-1, 1))
+    
     
