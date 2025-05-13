@@ -63,6 +63,7 @@ def finding_models(all_data):
 
     x_train, x_test, y_train, y_test = train_test_split(selected_data, VIT_POST, test_size=0.25, random_state=72, stratify=bins)    
     #                                                                                                               Using the bins for stratification
+        
     # ----- Scaling the data -----
     scaler_x = StandardScaler()
     scaler_y = StandardScaler()
@@ -175,14 +176,33 @@ def best_model(BP):
         print('R^2:', w_best_R, best_R)
         
 # ----- Utilising the model to predict one -----
-def prediction_vitesse(X_pp, all_data):    
-    BP = finding_models(all_data)
-    best_parameters = best_model()
-    SVR_best = svm.SVR(kernel=kernel, C=float(best_parameters['C']), gamma=best_parameters['gamma'], degree=int(best_parameters['degree']), epsilon=float(best_parameters['epsilon']))
-    SVR_best.fit(x_train_scaled, y_train_scaled)
+def prediction_vitesse(X_pp, all_data):  
     
-    y_hat = SVR_best.predict(x_test_scaled)
+    # Collecting the data on which the model will be trained
+    VIT_POST = all_data['VIT_POST']
+    data = all_data.drop(['VIT_POST'], axis = 1)
+    features = pd.read_excel(r'/Users/mathildetardif/Documents/Python/Biomarkers/responder_prediction/functions/Features.xlsx')
+    selectedFeatures = features['18']
+    selectedFeatures = selectedFeatures.dropna()
+    selected_data_df = data[selectedFeatures]
+    selected_data = selected_data_df.values
+    # ----- Scaling the data -----
+    scaler_x = StandardScaler()
+    scaler_y = StandardScaler()
+    data_scaled = scaler_x.fit_transform(data) # standardise/normalise the data based in the input by calculatG mean & SD of x_train & then, stdise x_train
+    VIT_POST_scaled = scaler_y.fit_transform(VIT_POST.array.reshape(-1,1))
+
+    # Creating the model
+    BP = finding_models(all_data)
+    best_parameters = best_model(BP)
+    SVR_best = svm.SVR(kernel=best_parameters.name, C=float(best_parameters['C']), gamma=best_parameters['gamma'], degree=int(best_parameters['degree']), epsilon=float(best_parameters['epsilon']))
+    # Training the model
+    SVR_best.fit(data, VIT_POST)
+    # Predicting on the subject's data (X_pp)
+    y_hat = SVR_best.predict(X_pp)
     # Reversing because data has been scaled
     y_hat_rev = scaler_y.inverse_transform(y_hat.reshape(-1, 1))
+    
+    return y_hat_rev
     
     
