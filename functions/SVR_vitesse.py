@@ -169,11 +169,12 @@ def best_model(BP):
     
     if w_best_R == w_best_rmse:
         print('The best model is found with a', w_best_R, 'kernel.')
-        return(BP.loc['rbf'])
+        return(BP.loc[w_best_R])
     else:
         print('Lowest rmse does not match with highest R^2 score')
         print('rmse:', w_best_rmse, best_rmse)
         print('R^2:', w_best_R, best_R)
+        return(BP.loc[w_best_rmse])
         
 # ----- Utilising the model to predict one -----
 def prediction_vitesse(X_pp, all_data):  
@@ -201,7 +202,7 @@ def prediction_vitesse(X_pp, all_data):
     # Training the model
     SVR_best.fit(data_scaled, VIT_POST_scaled)
     # Predicting on the subject's data (X_pp)
-    y_hat = SVR_best.predict(X_pp)
+    y_hat = SVR_best.predict(selected_X_pp)
     # Reversing because data has been scaled
     y_hat_rev = scaler_y.inverse_transform(y_hat.reshape(-1, 1))
     
