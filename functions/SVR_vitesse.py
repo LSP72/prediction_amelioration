@@ -145,7 +145,7 @@ def finding_models(all_data):
     params = BP['params'].apply(pd.Series)
     BP = pd.concat([BP[['target']], params], axis=1)
     BP['degree'] =  BP['degree'].apply(lambda x : int(x))
-    BP['accuracy'] = SVR_acc
+    BP['R^2 score'] = SVR_acc
     BP['RMSE'] = errors
     
     return BP
