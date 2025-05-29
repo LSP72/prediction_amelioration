@@ -353,7 +353,7 @@ def prediction_vitesse(X_pp, all_data):
     # VIT_POST_scaled = scaler_y.fit_transform(VIT_POST.array.reshape(-1,1))
     training_scaled = scaler_x.fit_transform(training)
     label_scaled = scaler_y.fit_transform(label.array.reshape(-1,1))
-    selected_x_pp_array = selected_X_pp.to_numpy()
+    selected_X_pp_array = selected_X_pp.to_numpy()
     selected_X_pp_scaled = scaler_x.transform(selected_X_pp_array)
 
 
