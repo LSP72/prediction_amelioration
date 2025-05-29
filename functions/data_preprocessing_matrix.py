@@ -65,7 +65,7 @@ def kin_var_fct(file_directory, output_dir, separate_legs, nb_participants):
     all_data = pd.concat((kin_var,gps), axis=1)
     
     # ----- Add participants demographic variables -----
-    demo_var = pd.read_excel(r'/Users/mathildetardif/Library/CloudStorage/OneDrive-UniversitedeMontreal/Mathilde Tardif - PhD - Biomarkers CP/PhD projects/Training responders/Data/Lokomat Data (matfiles)/Sample%d/MyParticipants_caracteristics_ML_vitesse%d.xlsx' %(nb_participants, nb_participants))    
+    demo_var = pd.read_excel(r'/Users/mathildetardif/Library/CloudStorage/OneDrive-UniversitedeMontreal/Mathilde Tardif - PhD - Biomarkers CP/PhD projects/Training responders/Data/Lokomat Data - SVR models/Sample%d/MyParticipants_caracteristics_ML_6MWT_vitesse%d.xlsx' %(nb_participants, nb_participants))    
     demo_var['BMI'] = demo_var['masse']/((demo_var['taille']/100)**2)
     demo_var.replace(['walker', 'cane', 'none'], [1,2,3], inplace=True) # The numbers are in the order so 1 is walker.
     # ********* ACTION REQUIRED *********:
@@ -74,7 +74,7 @@ def kin_var_fct(file_directory, output_dir, separate_legs, nb_participants):
     # demo_var = demo_var.loc[demo_var.index.repeat(2)].reset_index(drop=True)
     
     # ----- Add Label -----
-    demo_var.drop(['delta'], axis = 1, inplace= True)
+    demo_var.drop(['delta6MWT', 'deltaV'], axis = 1, inplace= True)
     demo_var.drop(['Patient', 'masse', 'taille', 'sex','Diagnostique'], axis = 1, inplace= True) #This line excludes some of the features that are in the demographic excel file.
     all_data = pd.concat((all_data, demo_var), axis=1)
     
