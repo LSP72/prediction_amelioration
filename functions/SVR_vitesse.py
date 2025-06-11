@@ -33,7 +33,6 @@ def finding_models(all_data):
     
     # --------------- Feature analysis ---------------
 
-
     # ----- Check the normality of features -----
     # print('¨***************')
     # print('Checking the normality of the features for speed')
@@ -65,8 +64,11 @@ def finding_models(all_data):
     # Creating bins of VIT_POST
     bins = pd.qcut(VIT_POST, q=5, labels=False)  # Quantile binning into 5 groups
 
+     # Splitting the data
     x_train, x_test, y_train, y_test = train_test_split(selected_data, VIT_POST, test_size=0.25, random_state=72, stratify=bins)    
 
+    # -- Collecting the data to csv file --
+    # Rearranging the data 
     row_training = y_train.index.to_list()
    
     X_train = pd.DataFrame(x_train, index = row_training)
@@ -231,6 +233,7 @@ def finding_models_loo(all_data):
                 'epsilon': (0.01, 1)
                 }
     kernels = ['linear', 'poly', 'rbf', 'sigmoid']
+    BP_from_all_LOO = {}
     loo = LeaveOneOut()
     
     for kernel in kernels:
@@ -327,7 +330,7 @@ def best_model(BP):
         print('Lowest rmse does not match with highest R^2 score')
         print('rmse:', w_best_rmse, best_rmse)
         print('R^2:', w_best_R, best_R)
-        return(BP.loc[w_best_rmse])
+        return(BP.loc[w_best_rmse])    
         
 # ----- Utilising the model to predict one -----
 def prediction_vitesse(X_pp, all_data):  
