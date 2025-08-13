@@ -15,6 +15,7 @@ class SVRModel:
         self.model = None           # will store the best SVR model, updated each time 
         self.X = None               # features of training dataset, start with nothing, but will be completed each time w/ a new sample
         self.y = None               # labels of training dataset, IDEM
+        self.best_acc_ = None       # stores the acc corresponding to the best params 
         self.best_params_ = None    # stores the best parameters, and updates it everytime the addition of a sample allows better results
 
     def add_data(self, X, y):
@@ -61,9 +62,16 @@ class SVRModel:
         )
 
         search.fit(self.X, self.y)      # training
-
+        
+        best_nmse_cv = search.best_score_
+        print(f"Best score during the RandomizedSearchCV: {best_nmse_cv:.4f}")
         self.model = search.best_estimator_         # recover the best model
         self.best_params_ = search.best_params_     # recover the best hp
+       
+        cv_results = search.cv_results_
+        for mean_score, params in zip(cv_results['mean_test_score'], cv_results['params']):
+            print(f"R²: {mean_score:.4f} -> {params}")
+
 
         # Evaluate
         preds = self.model.predict(self.X)          # quick check to see if model OK (no overfitting)
