@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 from sklearn.svm import SVR
-from sklearn.model_selection import RandomizedSearchCV, LeaveOneOut
+from sklearn.model_selection import RandomizedSearchCV, LeaveOneOut, cross_val_score, KFold
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import r2_score, mean_squared_error
@@ -15,7 +15,6 @@ class SVRModel:
         self.model = None           # will store the best SVR model, updated each time 
         self.X = None               # features of training dataset, start with nothing, but will be completed each time w/ a new sample
         self.y = None               # labels of training dataset, IDEM
-        self.best_acc_ = None       # stores the acc corresponding to the best params 
         self.best_params_ = None    # stores the best parameters, and updates it everytime the addition of a sample allows better results
 
     def add_data(self, X, y):
@@ -36,10 +35,12 @@ class SVRModel:
             raise ValueError("No data available for training.")
 
         loo = LeaveOneOut()     # method used to cross-validate in the optimisation
+        
+        print(f"🔍 Starting hyperparameter search...")
 
         # Define search space
         pbounds = {
-            "svr__C": uniform(1, 800),
+            "svr__C": uniform(1, 500),
             "svr__epsilon": uniform(0.01, 1),
             "svr__kernel": ["linear", "poly", "rbf"],
             "svr__gamma": ["scale", "auto"]
@@ -58,29 +59,32 @@ class SVRModel:
             scoring="neg_mean_squared_error",               # will try to maximise r2
             cv=loo,
             random_state=72,
-            n_jobs=-1
+            verbose=1,
+            n_jobs=1
         )
 
         search.fit(self.X, self.y)      # training
-        
-        best_nmse_cv = search.best_score_
-        print(f"Best score during the RandomizedSearchCV: {best_nmse_cv:.4f}")
+
         self.model = search.best_estimator_         # recover the best model
         self.best_params_ = search.best_params_     # recover the best hp
-       
-        cv_results = search.cv_results_
-        for mean_score, params in zip(cv_results['mean_test_score'], cv_results['params']):
-            print(f"R²: {mean_score:.4f} -> {params}")
-
+        print("✅ Training complete.")
 
         # Evaluate
         preds = self.model.predict(self.X)          # quick check to see if model OK (no overfitting)
         r2 = r2_score(self.y, preds)                # IDEM
         mse = mean_squared_error(self.y, preds)     # IDEM
-
-        print("✅ Training complete.")
         print(f"Best Params: {self.best_params_}")
         print(f"R²: {r2:.4f}, MSE: {mse:.4f}")
+        
+        # Evaluate with K-Fold CV for stability
+        # K-Fold CV setup
+        cv_splitter = KFold(n_splits=5, shuffle=True, random_state=72)
+        cv_r2 = cross_val_score(self.model, self.X, self.y, cv=cv_splitter, scoring="r2")
+        cv_rmse = np.sqrt(-cross_val_score(self.model, self.X, self.y, cv=cv_splitter, scoring="neg_mean_squared_error"))
+        print(f"📊 CV R²: {cv_r2.mean():.4f} ± {cv_r2.std():.4f}")
+        print(f"📊 CV RMSE: {cv_rmse.mean():.4f} ± {cv_rmse.std():.4f}")
+
+  
 
     def predict(self, X):
         """Make predictions with the trained model."""
