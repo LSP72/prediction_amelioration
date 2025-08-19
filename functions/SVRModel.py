@@ -43,7 +43,8 @@ class SVRModel:
             "svr__C": uniform(1, 500),
             "svr__epsilon": uniform(0.01, 1),
             "svr__kernel": ["linear", "poly", "rbf"],
-            "svr__gamma": ["scale", "auto"]
+            "svr__gamma": ["scale", "auto"]     # "scale" = 1/(n_features * X.var())
+                                                # "auto" = 1/n_features 
         }
 
         # Create a pipeline for the model: scaling + SVR - everydata will pas through that order
@@ -52,6 +53,7 @@ class SVRModel:
             ("svr", SVR())
             ])
     
+        # Creating the optimisation loop 
         search = RandomizedSearchCV(
             pipeline,
             param_distributions=pbounds,
