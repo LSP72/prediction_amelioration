@@ -87,6 +87,11 @@ class SVRModel:
         print(f"📊 CV RMSE: {cv_rmse.mean():.4f} ± {cv_rmse.std():.4f}")
 
   
+    def fit(self, X, y):
+        """Train the model with the (X, y) dataset"""
+        if self.model is None:
+            raise ValueError("Model has not been optimised yet.")
+        return self.model.fit(X, y)
 
     def predict(self, X):
         """Make predictions with the trained model."""
