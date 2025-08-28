@@ -131,6 +131,14 @@ class SVRModel:
         cv_rmse = np.sqrt(-cross_val_score(self.model, self.X, self.y, cv=cv_splitter, scoring="neg_mean_squared_error"))
         print(f"📊 CV R²: {cv_r2.mean():.4f} ± {cv_r2.std():.4f}")
         print(f"📊 CV RMSE: {cv_rmse.mean():.4f} ± {cv_rmse.std():.4f}")
+        
+        
+        
+        return {'R²': r2, 
+            'MSE': mse,
+            'CV R²': cv_r2.mean(),
+            'CV RMSE': cv_rmse.mean()
+            }
 
   
     def fit(self, X, y):
