@@ -80,6 +80,7 @@ class SVRModel:
             raise ValueError("No data available for training.")
 
         loo = LeaveOneOut()     # method used to cross-validate in the optimisation
+        cv=KFold(n_splits=5, shuffle=True, random_state=72)
         
         print(f"🔍 Starting hyperparameter search...")
 
@@ -104,7 +105,7 @@ class SVRModel:
             param_distributions=pbounds,
             n_iter=n_iter,
             scoring="neg_mean_squared_error",               # will try to maximise r2
-            cv=loo,
+            cv=cv,
             random_state=72,
             verbose=2,
             n_jobs=1
