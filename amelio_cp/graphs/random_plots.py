@@ -43,3 +43,18 @@ plt.ylabel("Features", fontsize=16)
 plt.xticks(rotation=45, ha='right')  # Rotate x-axis labels
 plt.yticks(rotation=0)              # Keep y-axis labels horizontal
 plt.show()
+
+
+#%% BOX PLOT
+# s being the pd.Series to plot
+
+# Boxplot
+plt.boxplot(s, positions=[0], widths=0.6)
+
+# Add jittered points
+x = np.random.normal(loc=0, scale=0.05, size=len(s))  # jitter around x=0
+plt.plot(x, s, 'o', alpha=0.6)
+
+plt.xticks([0], ["My Data"])
+plt.title("Boxplot + Raw Data")
+plt.show()

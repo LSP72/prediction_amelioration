@@ -1,15 +1,16 @@
 import pandas as pd
 import numpy as np
-from sklearn.svm import SVR
+from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import RandomizedSearchCV, LeaveOneOut, cross_val_score, KFold
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import r2_score, mean_squared_error
-from scipy.stats import uniform
+from scipy.stats import uniform, randint
 import joblib
 
-# Class that deals with the model
-class SVRModel:
+#%% Random Forest Regression
+
+class RFRModel:
     def __init__(self):    
         # self.name = name          # can name the model to call them then (i.e.SVRModel("Model A")), or can only initiate then such as model_A = SVRModel()
         self.model = None           # will store the best SVR model, updated each time 
@@ -42,22 +43,19 @@ class SVRModel:
 
         # Define search space
         pbounds = {
-            "svr__C": uniform(1, 500),
-            "svr__epsilon": uniform(0.01, 1),
-            "svr__kernel": ["linear", "poly", "rbf"],
-            "svr__gamma": ["scale", "auto"]     # "scale" = 1/(n_features * X.var())
-                                                # "auto" = 1/n_features 
-        }
+            "rfr__n_estimators": randint(50, 200),
+            "rfr__max_depth": [None, 5, 10, 20],
+            "rfr__min_samples_split": randint(2,5)
+            }
 
         # Create a pipeline for the model: scaling + SVR - everydata will pas through that order
-        pipeline = Pipeline([
-            ("scaler", StandardScaler()),
-            ("svr", SVR())
+        pipeline_rfr = Pipeline([
+            ("rfr", RandomForestRegressor(random_state=72))
             ])
     
         # Creating the optimisation loop 
         search = RandomizedSearchCV(
-            pipeline,
+            pipeline_rfr,
             param_distributions=pbounds,
             n_iter=n_iter,
             scoring="neg_mean_squared_error",               # will try to maximise r2
@@ -72,36 +70,38 @@ class SVRModel:
         print(f"📊 CV R²: {cv_r2.mean():.4f} ± {cv_r2.std():.4f}")
         print(f"📊 CV RMSE: {cv_rmse.mean():.4f} ± {cv_rmse.std():.4f}")
         
-        return cv_r2.mean(), cv_rmse.mean()
+        return {
+            "CV R² mean": cv_r2.mean(),
+            "CV R² std": cv_r2.std(),
+            "CV RMSE mean": cv_rmse.mean(),
+            "CV RMSE std": cv_rmse.std()
+        }
+
 
     def train_and_tune(self, n_iter=100):
         """Tune hyperparameters with RandomizedSearchCV + LOO CV."""
         if self.X is None or self.y is None:        # Check if there is some data
             raise ValueError("No data available for training.")
 
-        loo = LeaveOneOut()     # method used to cross-validate in the optimisation
         cv=KFold(n_splits=5, shuffle=True, random_state=72)
         
         print(f"🔍 Starting hyperparameter search...")
 
         # Define search space
         pbounds = {
-            "svr__C": uniform(1, 500),
-            "svr__epsilon": uniform(0.01, 1),
-            "svr__kernel": ["linear", "poly", "rbf"],
-            "svr__gamma": ["scale", "auto"]     # "scale" = 1/(n_features * X.var())
-                                                # "auto" = 1/n_features 
-        }
-
+            "rfr__n_estimators": randint(50, 200),
+            "rfr__max_depth": [None, 5, 10, 20],
+            "rfr__min_samples_split": randint(2,5)
+            }
+   
         # Create a pipeline for the model: scaling + SVR - everydata will pas through that order
-        pipeline = Pipeline([
-            ("scaler", StandardScaler()),
-            ("svr", SVR())
+        pipeline_rfr = Pipeline([
+            ("rfr", RandomForestRegressor(random_state=72))
             ])
     
         # Creating the optimisation loop 
         search = RandomizedSearchCV(
-            pipeline,
+            pipeline_rfr,
             param_distributions=pbounds,
             n_iter=n_iter,
             scoring="neg_mean_squared_error",               # will try to maximise r2
@@ -126,13 +126,12 @@ class SVRModel:
         
         # Evaluate with K-Fold CV for stability
         # K-Fold CV setup
-        cv_splitter = KFold(n_splits=5, shuffle=True, random_state=72)
+        cv_splitter = KFold(n_splits=5, shuffle=True, random_state=42)
         cv_r2 = cross_val_score(self.model, self.X, self.y, cv=cv_splitter, scoring="r2")
         cv_rmse = np.sqrt(-cross_val_score(self.model, self.X, self.y, cv=cv_splitter, scoring="neg_mean_squared_error"))
         print(f"📊 CV R²: {cv_r2.mean():.4f} ± {cv_r2.std():.4f}")
         print(f"📊 CV RMSE: {cv_rmse.mean():.4f} ± {cv_rmse.std():.4f}")
-        
-        
+
         
         return {'R²': r2, 
             'MSE': mse,
@@ -178,20 +177,4 @@ class SVRModel:
         obj.best_params_ = data["best_params"]
         print(f"📂 Model loaded from {path}")
         return obj
-
-#%% RUNNING THE CODE
-
-# # ====== Later: load & use ======
-# model = SVRModel.load("svr_model.pkl")
-
-# # Add new sample
-# model.add_data(new_X, new_y)
-
-# # Re-train if necessary
-# model.train_and_tune(n_iter=100)
-
-# # Save updated model
-# model.save("svr_model.pkl")
-
-# # Predict on new data
-# preds = model.predict(X_test)
+    

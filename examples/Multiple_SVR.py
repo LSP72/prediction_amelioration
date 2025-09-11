@@ -17,6 +17,7 @@ import shap
 sys.path.append('/Users/mathildetardif/Documents/Python/Biomarkers/prediction_amelioration/functions/')
 import MyfeaturExtractor, featureSelection
 import data_preprocessing_matrix, interface
+import SVR_vitesse, SVR_6MWT
 from imblearn.over_sampling import SMOTE # Synthetic Minority Oversampling TEchnique
                                          # Use to address imbalanced datasets for classification tasks (like here) => oversample the minority class by creating synth sample
 
@@ -29,16 +30,14 @@ from sklearn.metrics import accuracy_score
 # NbPps = 0
 # model, NbPps = interface.window1(model, NbPps)
 # Number of participants
-nb_participants = 26
-# Model used (in capital letters): 'SVM' or 'SVR'
-model = 'SVM'
+nb_participants = 25
 # Number of features
 # Directory of the sample's folder
-file_directory = r'/Users/mathildetardif/Library/CloudStorage/OneDrive-UniversitedeMontreal/Mathilde Tardif - PhD - Biomarkers CP/PhD projects/Training responders/Data/Lokomat Data (matfiles)/SampleV/'
+file_directory = r'/Users/mathildetardif/Library/CloudStorage/OneDrive-UniversitedeMontreal/Mathilde Tardif - PhD - Biomarkers CP/PhD projects/Training responders/Data/Lokomat Data - SVR models/Sample%d/' %(nb_participants)
 # Directory of the outputs
-output_dir = r'/Users/mathildetardif/Library/CloudStorage/OneDrive-UniversitedeMontreal/Mathilde Tardif - PhD - Biomarkers CP/PhD projects/Training responders/Data/outputsV/'
+output_dir = r'/Users/mathildetardif/Library/CloudStorage/OneDrive-UniversitedeMontreal/Mathilde Tardif - PhD - Biomarkers CP/PhD projects/Training responders/Data/Lokomat Data - SVR models/outputs/'
 
-
+#%%
 # ----- Extract variables from .mat files -----
 # The output data will be in the order of all pre intervention files and then all post intervention files. 
 # Since the folder only contains Pre data so we are gonna have the pre data only. 
@@ -48,6 +47,14 @@ all_data = data_preprocessing_matrix.kin_var_fct(file_directory = file_directory
                                          separate_legs = True,
                                          nb_participants = nb_participants)
 
+# Saving the matrix for later if needed
+all_data.to_csv(output_dir+'all_data.csv', index=True)
+
+# Or Loading the csv files
+all_data = pd.read_csv(output_dir+'all_data.csv')
+all_data.drop('Unnamed: 0', axis=1, inplace = True)
+
+#%%
 # --------------- Feature analysis ---------------
 
 # ----- Correlation -----
@@ -83,17 +90,19 @@ print("Kurtosis test p-values:\n", kurtst.pvalue)
 # X_pp = row with all the info of one participant
 
 vitesse_pred = SVR_vitesse.prediction_vitesse(X_pp, all_data)
+vitesse_pred_var = vitesse_pred[0][0]
 _6MWT_pred = SVR_6MWT.prediction_6MWT(X_pp, all_data)
+_6MWT_pred_var = _6MWT_pred[0][0]
 
 ## Getting the pre-values
-pre_vitesse = X_pp['VIT_PRE']
-pre_6MWT = X_pp['6MWT_PRE']
+pre_vitesse = X_pp.at['VIT_PRE'].values
+pre_6MWT = X_pp.at['6MWT_PRE'].values
 
 temp = ['PRE', 'POST'] 
-vitesse = [pre_vitesse, vitesse_pred]
-vitesse_progression = 100*(vitesse_pred-pre_vitesse)/pre_vitesse
-_6MWT = [pre_6MWT, _6MWT_pred]
-_6MWT_progression = 100*(_6MWT_pred-pre_6MWT)/pre_6MWT
+vitesse = [pre_vitesse, vitesse_pred_var]
+vitesse_progression = 100*(vitesse_pred_var-pre_vitesse)/pre_vitesse
+_6MWT = [pre_6MWT, _6MWT_pred_var]
+_6MWT_progression = 100*(_6MWT_pred_var-pre_6MWT)/pre_6MWT
 
 # Plotting the evolution
 fig, axs = plt.subplots(2)
