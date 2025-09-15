@@ -9,6 +9,8 @@ class Process:
 
     @staticmethod
     def calculate_ROM(df:DataFrame):
+
+        print(df)
         
         df['ROM_Hip_Sag'] = df['Max_Hip_flx/ext'] - \
             df['Min_Hip_flx/ext']
@@ -89,7 +91,7 @@ class Process:
                                                              joint_names=joint_names)
         
         # Calculating ROM from the function above
-        kin_var = calculate_ROM(kin_var)
+        kin_var = self.calculate_ROM(kin_var)
         
         # ----- fixing the values of cadence -----
         kin_var['vitCadencePasParMinute'] *= 2
