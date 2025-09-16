@@ -3,3 +3,5 @@ external_files
 dataset
 examples/results
 *.json
+*.DS_Store
+*.ipynb
