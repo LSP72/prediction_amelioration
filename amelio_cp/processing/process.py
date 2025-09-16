@@ -1,6 +1,6 @@
 import pandas as pd
 from pandas import DataFrame
-import amelio_cp.processing.mat_to_df as mat_to_df
+import amelio_cp.processing.old_featurExtractor as mat_to_df
 
 
 class Process:
@@ -10,7 +10,7 @@ class Process:
     @staticmethod
     def calculate_ROM(df:DataFrame):
 
-        print(df)
+        print(df.columns)
         
         df['ROM_Hip_Sag'] = df['Max_Hip_flx/ext'] - \
             df['Min_Hip_flx/ext']
@@ -58,7 +58,7 @@ class Process:
         return df
     
 
-    def load_data(self, data_dir: str, gps_path: str, demographic_path: str, separate_legs: bool = True):
+    def load_data(self, data_dir: str, output_dir: str, gps_path: str, demographic_path: str, separate_legs: bool = True):
         """
         Load data from raw data
 
@@ -86,6 +86,7 @@ class Process:
         
         # Extracting variables from .mat files
         kin_var = mat_to_df.MinMax_feature_extractor(directory=data_dir,
+                                                     output_dir=output_dir,
                                                              measurements=measurements,
                                                              separate_legs=separate_legs,
                                                              joint_names=joint_names)
