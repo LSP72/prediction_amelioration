@@ -1,0 +1,8 @@
+*.pyc
+external_files
+dataset
+examples/results
+examples/sandbox
+*.json
+*.DS_Store
+*.ipynb
