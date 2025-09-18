@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from sklearn.svm import SVC
+from sklearn.svm import SVR
 from sklearn.model_selection import RandomizedSearchCV, LeaveOneOut, cross_val_score, KFold
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
@@ -8,8 +8,8 @@ from sklearn.metrics import r2_score, mean_squared_error
 from scipy.stats import uniform
 import joblib
 
-
-class BaseModel:
+#%% SVR
+class LinearModel:
     def __init__(self):    
         # self.name = name          # can name the model to call them then (i.e.SVRModel("Model A")), or can only initiate then such as model_A = SVRModel()
         self.model = None           # will store the best SVR model, updated each time 
@@ -17,11 +17,8 @@ class BaseModel:
         self.y = None               # labels of training dataset, IDEM
         self.best_params_ = None    # stores the best parameters, and updates it everytime the addition of a sample allows better results
 
-        # to be defined in child classes
-        self.pipeline = None                #i.e., Pipeline([("scaler", StandardScaler()), ("svc", SVC())])
+        self.pipeline = None        #i.e., Pipeline([("scaler", StandardScaler()), ("svr", SVR())])
         self.param_distributions = None
-        self.primary_scoring = None 
-        self.secondary_scoring = None
 
     def add_data(self, X, y):
         """Function that will add new samples to the training set."""
@@ -40,60 +37,9 @@ class BaseModel:
         
         if self.X is None or self.y is None:        # Check if there is some data
             raise ValueError("No data available for training.")
-        if self.pipeline is None or self.param_distributions is None:
-            raise ValueError("Child class must define pipeline and param_distributions.")
             
         inner_cv = KFold(n_splits=5, shuffle=True, random_state=42)
         outer_cv = KFold(n_splits=5, shuffle=True, random_state=72)
-        
-        print(f"🔍 Starting hyperparameter search...")
-
-        # Define search space
-        pbounds = self.param_distributions
-
-        # Create a pipeline for the model: scaling + SVR - everydata will pas through that order
-        pipeline = self.pipeline
-    
-        # Creating the optimisation loop 
-        search = RandomizedSearchCV(
-            pipeline,
-            param_distributions=pbounds,
-            n_iter=n_iter,
-            scoring=self.primary_scoring, 
-            cv=inner_cv,
-            random_state=72,
-            verbose=2,
-            n_jobs=-1
-        )
-       
-        cv_prim = cross_val_score(search, self.X, self.y, cv=outer_cv, scoring=self.primary_scoring)
-        print(f"📊 CV {self.primary_scoring}: {cv_prim.mean():.4f} ± {cv_prim.std():.4f}")
-        
-        results = {
-            "CV {self.primary_scoring} scores": cv_prim.tolist(),
-            "CV {self.primary_scoring} mean": float(cv_prim.mean()),
-            "CV {self.primary_scoring} std": float(cv_prim.std()),
-        }
-
-        if self.secondary_scoring is not None:
-            cv_sec = cross_val_score(search, self.X, self.y, cv=outer_cv, scoring=self.secondary_scoring)
-            print(f"📊 CV {self.secondary_scoring}: {cv_sec.mean():.4f} ± {cv_sec.std():.4f}")
-
-        results.update({
-            "CV {self.secondary_scoring} scores": cv_sec.tolist(),
-            "CV {self.secondary_scoring} mean": float(cv_sec.mean()),
-            "CV {self.secondary_scoring} std": float(cv_sec.std())
-        })
-
-        return results
-
-
-    def train_and_tune(self, n_iter=100):
-        """Tune hyperparameters with RandomizedSearchCV + LOO CV."""
-        if self.X is None or self.y is None:        # Check if there is some data
-            raise ValueError("No data available for training.")
-
-        cv=KFold(n_splits=5, shuffle=True, random_state=72)
         
         print(f"🔍 Starting hyperparameter search...")
 
@@ -115,6 +61,45 @@ class BaseModel:
         # Creating the optimisation loop 
         search = RandomizedSearchCV(
             pipeline_svr,
+            param_distributions=pbounds,
+            n_iter=n_iter,
+            scoring="neg_mean_squared_error",               # will try to maximise r2
+            cv=inner_cv,
+            random_state=72,
+            verbose=2,
+            n_jobs=1
+        )
+        
+        cv_r2 = cross_val_score(search, self.X, self.y, cv=outer_cv, scoring="r2")
+        cv_rmse = np.sqrt(-cross_val_score(search, self.X, self.y, cv=outer_cv, scoring="neg_mean_squared_error"))
+        print(f"📊 CV R²: {cv_r2.mean():.4f} ± {cv_r2.std():.4f}")
+        print(f"📊 CV RMSE: {cv_rmse.mean():.4f} ± {cv_rmse.std():.4f}")
+        
+        return {
+            "CV R² mean": cv_r2.mean(),
+            "CV R² std": cv_r2.std(),
+            "CV RMSE mean": cv_rmse.mean(),
+            "CV RMSE std": cv_rmse.std()
+        }
+
+    def train_and_tune(self, n_iter=100):
+        """Tune hyperparameters"""
+        if self.X is None or self.y is None:        # Check if there is some data
+            raise ValueError("No data available for training.")
+
+        cv=KFold(n_splits=5, shuffle=True, random_state=72)
+        
+        print(f"🔍 Starting hyperparameter search...")
+
+        # Define search space
+        pbounds = self.param_distributions
+
+        # Create a pipeline for the model: scaling + SVR - everydata will pas through that order
+        model_pipeline = self.pipeline
+    
+        # Creating the optimisation loop 
+        search = RandomizedSearchCV(
+            pipeline=model_pipeline,
             param_distributions=pbounds,
             n_iter=n_iter,
             scoring="neg_mean_squared_error",               # will try to maximise r2

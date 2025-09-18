@@ -1,22 +1,22 @@
 import pandas as pd
-import numpy as np
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.model_selection import RandomizedSearchCV, LeaveOneOut, cross_val_score, KFold
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import r2_score, mean_squared_error
-from scipy.stats import uniform, randint
-import joblib
+from amelio_cp.optimisation.optimisation_methods import OptimisationMethods
+from sklearn.model_selection import RandomizedSearchCV, KFold, cross_val_score
+from sklearn.metrics import accuracy_score
 
-#%% Random Forest Regression
-
-class RFRModel:
+#%% Base Model for classification
+class ClassifierModel:
     def __init__(self):    
         # self.name = name          # can name the model to call them then (i.e.SVRModel("Model A")), or can only initiate then such as model_A = SVRModel()
         self.model = None           # will store the best SVR model, updated each time 
         self.X = None               # features of training dataset, start with nothing, but will be completed each time w/ a new sample
         self.y = None               # labels of training dataset, IDEM
         self.best_params_ = None    # stores the best parameters, and updates it everytime the addition of a sample allows better results
+
+        # to be defined in child classes
+        self.pipeline = None                #i.e., Pipeline([("scaler", StandardScaler()), ("svc", SVC())])
+        self.param_distributions = None
+        self.primary_scoring = None 
+        self.secondary_scoring = None
 
     def add_data(self, X, y):
         """Function that will add new samples to the training set."""
@@ -35,6 +35,8 @@ class RFRModel:
         
         if self.X is None or self.y is None:        # Check if there is some data
             raise ValueError("No data available for training.")
+        if self.pipeline is None or self.param_distributions is None:
+            raise ValueError("Child class must define pipeline and param_distributions.")
             
         inner_cv = KFold(n_splits=5, shuffle=True, random_state=42)
         outer_cv = KFold(n_splits=5, shuffle=True, random_state=72)
@@ -42,74 +44,61 @@ class RFRModel:
         print(f"🔍 Starting hyperparameter search...")
 
         # Define search space
-        pbounds = {
-            "rfr__n_estimators": randint(50, 200),
-            "rfr__max_depth": [None, 5, 10, 20],
-            "rfr__min_samples_split": randint(2,5)
-            }
+        pbounds = self.param_distributions
 
         # Create a pipeline for the model: scaling + SVR - everydata will pas through that order
-        pipeline_rfr = Pipeline([
-            ("rfr", RandomForestRegressor(random_state=72))
-            ])
+        pipeline = self.pipeline
     
         # Creating the optimisation loop 
         search = RandomizedSearchCV(
-            pipeline_rfr,
+            pipeline,
             param_distributions=pbounds,
             n_iter=n_iter,
-            scoring="neg_mean_squared_error",               # will try to maximise r2
+            scoring=self.primary_scoring, 
             cv=inner_cv,
             random_state=72,
             verbose=2,
-            n_jobs=1
+            n_jobs=-1
         )
+       
+        cv_prim = cross_val_score(search, self.X, self.y, cv=outer_cv, scoring=self.primary_scoring)
+        print(f"📊 CV {self.primary_scoring}: {cv_prim.mean():.4f} ± {cv_prim.std():.4f}")
         
-        cv_r2 = cross_val_score(search, self.X, self.y, cv=outer_cv, scoring="r2")
-        cv_rmse = np.sqrt(-cross_val_score(search, self.X, self.y, cv=outer_cv, scoring="neg_mean_squared_error"))
-        print(f"📊 CV R²: {cv_r2.mean():.4f} ± {cv_r2.std():.4f}")
-        print(f"📊 CV RMSE: {cv_rmse.mean():.4f} ± {cv_rmse.std():.4f}")
-        
-        return {
-            "CV R² mean": cv_r2.mean(),
-            "CV R² std": cv_r2.std(),
-            "CV RMSE mean": cv_rmse.mean(),
-            "CV RMSE std": cv_rmse.std()
+        results = {
+            "CV {self.primary_scoring} scores": cv_prim.tolist(),
+            "CV {self.primary_scoring} mean": float(cv_prim.mean()),
+            "CV {self.primary_scoring} std": float(cv_prim.std()),
         }
 
+        if self.secondary_scoring is not None:
+            cv_sec = cross_val_score(search, self.X, self.y, cv=outer_cv, scoring=self.secondary_scoring)
+            print(f"📊 CV {self.secondary_scoring}: {cv_sec.mean():.4f} ± {cv_sec.std():.4f}")
 
-    def train_and_tune(self, n_iter=100):
-        """Tune hyperparameters with RandomizedSearchCV + LOO CV."""
+        results.update({
+            "CV {self.secondary_scoring} scores": cv_sec.tolist(),
+            "CV {self.secondary_scoring} mean": float(cv_sec.mean()),
+            "CV {self.secondary_scoring} std": float(cv_sec.std())
+        })
+
+        return results
+
+
+    def train_and_tune(self, method:str, n_iter=100):
+        """Tune hyperparameters with choosen method and fit the model."""
         if self.X is None or self.y is None:        # Check if there is some data
-            raise ValueError("No data available for training.")
-
-        cv=KFold(n_splits=5, shuffle=True, random_state=72)
-        
-        print(f"🔍 Starting hyperparameter search...")
+            raise ValueError("❌ No data available for training.")
 
         # Define search space
-        pbounds = {
-            "rfr__n_estimators": randint(50, 200),
-            "rfr__max_depth": [None, 5, 10, 20],
-            "rfr__min_samples_split": randint(2,5)
-            }
-   
+        pbounds = self.param_distributions
+
         # Create a pipeline for the model: scaling + SVR - everydata will pas through that order
-        pipeline_rfr = Pipeline([
-            ("rfr", RandomForestRegressor(random_state=72))
-            ])
+        pipeline_svc = self.pipeline
     
         # Creating the optimisation loop 
-        search = RandomizedSearchCV(
-            pipeline_rfr,
-            param_distributions=pbounds,
-            n_iter=n_iter,
-            scoring="neg_mean_squared_error",               # will try to maximise r2
-            cv=cv,
-            random_state=72,
-            verbose=2,
-            n_jobs=1
-        )
+        if method == "random":
+            search = OptimisationMethods.random_search(pipeline_svc, pbounds, n_iter, k_folds=5)
+        elif method == "bayesian":
+            search = OptimisationMethods.bayesian_search(pipeline_svc, model, self.X, self.y, pbounds, n_iter, k_folds=5)
 
         search.fit(self.X, self.y)      # training
 
@@ -119,24 +108,19 @@ class RFRModel:
 
         # Evaluate
         preds = self.model.predict(self.X)          # quick check to see if model OK (no overfitting)
-        r2 = r2_score(self.y, preds)                # IDEM
-        mse = mean_squared_error(self.y, preds)     # IDEM
+        acc = accuracy_score(self.y, preds)     # IDEM
         print(f"Best Params: {self.best_params_}")
-        print(f"R²: {r2:.4f}, MSE: {mse:.4f}")
+        print(f"Accuracy: {acc:.4f}")
         
         # Evaluate with K-Fold CV for stability
         # K-Fold CV setup
-        cv_splitter = KFold(n_splits=5, shuffle=True, random_state=42)
-        cv_r2 = cross_val_score(self.model, self.X, self.y, cv=cv_splitter, scoring="r2")
-        cv_rmse = np.sqrt(-cross_val_score(self.model, self.X, self.y, cv=cv_splitter, scoring="neg_mean_squared_error"))
-        print(f"📊 CV R²: {cv_r2.mean():.4f} ± {cv_r2.std():.4f}")
-        print(f"📊 CV RMSE: {cv_rmse.mean():.4f} ± {cv_rmse.std():.4f}")
+        cv_splitter = KFold(n_splits=5, shuffle=True, random_state=72)
+        cv_acc = cross_val_score(self.model, self.X, self.y, cv=cv_splitter, scoring="accuracy")
+        print(f"📊 CV accuracy: {cv_acc.mean():.4f} ± {cv_acc.std():.4f}")
 
         
-        return {'R²': r2, 
-            'MSE': mse,
-            'CV R²': cv_r2.mean(),
-            'CV RMSE': cv_rmse.mean()
+        return {'Accuracy': acc,
+            'CV accuracy': cv_acc.mean(),
             }
 
   
@@ -178,3 +162,4 @@ class RFRModel:
         print(f"📂 Model loaded from {path}")
         return obj
     
+  

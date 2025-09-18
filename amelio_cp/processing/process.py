@@ -6,6 +6,10 @@ import amelio_cp.processing.old_featurExtractor as mat_to_df
 class Process:
     def __init__(self):
         pass
+    
+    def load_csv(file_path:str) -> DataFrame:
+        df = pd.read_csv(file_path)
+        return df
 
     @staticmethod
     def calculate_ROM(df:DataFrame):
@@ -44,15 +48,15 @@ class Process:
         
         df = pd.read_excel(file_path)
         df['BMI'] = df['masse']/((df['taille']/100)**2)
+
         # The numbers are in the order so 1 is walker.
         df.replace(['walker', 'cane', 'none'],
                          [1, 2, 3], inplace=True)
 
-
         # ----- Add Label -----
         df.drop(['delta6MWT', 'deltaV'], axis=1, inplace=True)
         # This line excludes some of the features that are in the demographic excel file.
-        df.drop(['Patient', 'masse', 'taille', 'sex',
+        df.drop(['Patient', 'masse', 'sex', 'taille',
                       'Diagnostique'], axis=1, inplace=True)
         
         return df
@@ -110,3 +114,26 @@ class Process:
 
         return all_data
 
+    @staticmethod
+    def calculate_MCID(all_data:DataFrame, variable:str)->list:
+        if variable == 'VIT':
+            delta_VIT = all_data[variable + '_POST'] - all_data[variable + '_PRE']
+            MCID_VIT = []
+            for i in delta_VIT:
+                if i >= 0.1:
+                    MCID_VIT.append(1)
+                else: MCID_VIT.append(0)
+            return MCID_VIT
+
+        elif variable == '6MWT' or variable == '10MWT':
+            GMFCS_MCID = {1: range(4,29), 2: range(4,29), 3: range(9,20), 4: range(10,28)} 
+            delta_6MWT = all_data[variable + '_POST'] - all_data[variable + '_PRE']
+            MCID_6MWT = []
+            for i in range(len(delta_6MWT)):
+                if delta_6MWT[i] >= max(GMFCS_MCID[all_data['GMFCS'][i]]):
+                    MCID_6MWT.append(1)
+                else:
+                    MCID_6MWT.append(0)
+            return MCID_6MWT
+        else:
+            raise ValueError("Variable not recognized. Use 'VIT', '6MWT', or '10MWT'.")
