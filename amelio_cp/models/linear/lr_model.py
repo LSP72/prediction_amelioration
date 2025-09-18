@@ -9,13 +9,11 @@ from scipy.stats import uniform
 from .linear_model import LinearModel
 import joblib
 
-#%% Linear Regression
+# %% Linear Regression
+
 
 class LRModel(LinearModel):
-    def __init__(self): 
+    def __init__(self):
         super().__init__()
 
-        self.pipeline = Pipeline([
-            ("scaler", StandardScaler()),
-            ("lr", LinearRegression())
-        ])
+        self.pipeline = Pipeline([("scaler", StandardScaler()), ("lr", LinearRegression())])

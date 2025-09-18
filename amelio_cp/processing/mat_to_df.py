@@ -16,9 +16,11 @@ def load_mat_data(file):
 
     return data
 
+
 # Organize mat files in the order of PreLokomat and then PostLokomat.
 def natural_sort_key(s):
-        return [int(text) if text.isdigit() else text.lower() for text in re.split('(\d+)', s)]
+    return [int(text) if text.isdigit() else text.lower() for text in re.split("(\d+)", s)]
+
 
 def organized(directory):
     pre_files = [f for f in os.listdir(directory) if f.endswith("eLokomat.mat")]
@@ -28,6 +30,7 @@ def organized(directory):
     mat_files_sorted = mat_files_pre_sorted + mat_files_post_sorted
     print("The files are sorted in the order pre and post training!")
     return mat_files_sorted
+
 
 def access_struct(data: Union[dict, np.ndarray], structs: Sequence[str]) -> np.ndarray:
     """
@@ -53,6 +56,7 @@ def access_struct(data: Union[dict, np.ndarray], structs: Sequence[str]) -> np.n
             data = data[struct]
     return data
 
+
 # --- HELPERS --- #
 def _ensure_column_vector(x: Union[np.ndarray, float, int]) -> np.ndarray:
     """Return x as a (n, 1) float64 column vector."""
@@ -77,7 +81,9 @@ def _vector_from_mat_field(arr: np.ndarray, length: Optional[int] = None) -> np.
     return v
 
 
-def _stack_timeseries_and_scalars(ts_cols: List[np.ndarray], scalar_values: List[float], target_len: int = 100) -> np.ndarray:
+def _stack_timeseries_and_scalars(
+    ts_cols: List[np.ndarray], scalar_values: List[float], target_len: int = 100
+) -> np.ndarray:
     """
     Build a (target_len, n_cols) matrix by horizontally stacking:
       - time-series columns (already shape (target_len, k))
@@ -96,16 +102,20 @@ def _stack_timeseries_and_scalars(ts_cols: List[np.ndarray], scalar_values: List
     return np.hstack(mats)
 
 
-def _joint_headers(prefix: str, joint: str, directions: Tuple[str, str, str] = ('flx/ext', 'abd/add', 'int/ext rot')) -> List[str]:
+def _joint_headers(
+    prefix: str, joint: str, directions: Tuple[str, str, str] = ("flx/ext", "abd/add", "int/ext rot")
+) -> List[str]:
     """
     Build 3 headers for a joint (x/y/z) with a prefix.
     Example: prefix='Min_R', joint='Hip' -> ['Min_RHip_flx/ext', 'Min_RHip_abd/add', 'Min_RHip_int/ext rot']
     """
     return [f"{prefix}{joint}_{d}" for d in directions]
 
+
 def _side_char(side_struct: str) -> str:
     """Return 'R' for 'Right', 'L' for 'Left'."""
     return side_struct[0]
+
 
 # --- EXTRACTORS --- #
 def _extract_ang_full_cycle_timeseries(all_data: np.ndarray, joint_names: Sequence[str], side_char: str) -> np.ndarray:
@@ -116,9 +126,10 @@ def _extract_ang_full_cycle_timeseries(all_data: np.ndarray, joint_names: Sequen
     for joint in joint_names:
         key = side_char + joint  # e.g., 'RHip'
         joint_kin = all_data[0, 0][key][0][0]  # MATLAB field
-        joint_kin = np.reshape(joint_kin, (100, 3), order='F')  # (100,3)
+        joint_kin = np.reshape(joint_kin, (100, 3), order="F")  # (100,3)
         cols.append(joint_kin)
     return np.hstack(cols) if cols else np.empty((100, 0))
+
 
 def _extract_ang_full_cycle_mean(all_data: np.ndarray, joint_names: Sequence[str], side_char: str) -> np.ndarray:
     """
@@ -129,9 +140,10 @@ def _extract_ang_full_cycle_mean(all_data: np.ndarray, joint_names: Sequence[str
     for joint in joint_names:
         key = side_char + joint  # e.g., 'RHip'
         joint_kin = all_data[0, 0][key][0][0]
-        joint_kin = np.reshape(joint_kin, (100, 3), order='F')  # (100,3)
+        joint_kin = np.reshape(joint_kin, (100, 3), order="F")  # (100,3)
         parts.append(np.mean(joint_kin, axis=0))  # (3,)
     return np.concatenate(parts) if parts else np.array([], dtype=float)
+
 
 def _extract_minmax_vector(all_data: np.ndarray, joint_names: Sequence[str], side_char: str) -> np.ndarray:
     """
@@ -145,12 +157,13 @@ def _extract_minmax_vector(all_data: np.ndarray, joint_names: Sequence[str], sid
         parts.append(_vector_from_mat_field(vec, length=3))
     return np.concatenate(parts) if parts else np.array([], dtype=float)
 
+
 def MinMax_feature_extractor(
     *,
     directory: Union[str, Path],
     measurements: List[str],
     separate_legs: bool,
-    joint_names: Sequence[str] = ('Pelvis', 'Hip', 'Knee', 'Ankle', 'FootProgress'),
+    joint_names: Sequence[str] = ("Pelvis", "Hip", "Knee", "Ankle", "FootProgress"),
 ):
     """
     Compute min and max values for joint DoFs during stance and return them.
@@ -171,13 +184,13 @@ def MinMax_feature_extractor(
     directory = Path(directory)
 
     measurements = list(measurements)
-    if 'angMaxAtFullStance' not in measurements:
-        measurements.insert(0, 'angMaxAtFullStance')
-    if 'angMinAtFullStance' not in measurements:
-        measurements.insert(0, 'angMinAtFullStance')
+    if "angMaxAtFullStance" not in measurements:
+        measurements.insert(0, "angMaxAtFullStance")
+    if "angMinAtFullStance" not in measurements:
+        measurements.insert(0, "angMinAtFullStance")
 
     joint_names = list(joint_names)
-    side_structs = ['Right', 'Left']
+    side_structs = ["Right", "Left"]
     prepost_files = organized(directory)
 
     rows: List[np.ndarray] = []
@@ -193,22 +206,22 @@ def MinMax_feature_extractor(
                 header_parts: List[str] = []
 
                 for measurement in measurements:
-                    all_data = access_struct(data, ['c', 'results', side, measurement])
+                    all_data = access_struct(data, ["c", "results", side, measurement])
 
-                    if measurement == 'angMinAtFullStance':
+                    if measurement == "angMinAtFullStance":
                         vecs = _extract_minmax_vector(all_data, joint_names, side_c)
                         row_parts.append(vecs)
                         for j in joint_names:
                             header_parts += _joint_headers(prefix=f"Min_{side_c}", joint=j)
 
-                    elif measurement == 'angMaxAtFullStance':
+                    elif measurement == "angMaxAtFullStance":
                         vecs = _extract_minmax_vector(all_data, joint_names, side_c)
                         row_parts.append(vecs)
                         for j in joint_names:
                             header_parts += _joint_headers(prefix=f"Max_{side_c}", joint=j)
 
-                    elif measurement == 'baseSustentation':
-                        val = _scalar_from_mat_field(all_data[0, 0]['maxPreMoyenne'][0])
+                    elif measurement == "baseSustentation":
+                        val = _scalar_from_mat_field(all_data[0, 0]["maxPreMoyenne"][0])
                         row_parts.append(np.array([val]))
                         header_parts.append(f"Max_{side}_{'BOS'}")
 
@@ -229,22 +242,22 @@ def MinMax_feature_extractor(
             for side in side_structs:
                 side_c = _side_char(side)
                 for measurement in measurements:
-                    all_data = access_struct(data, ['c', 'results', side, measurement])
+                    all_data = access_struct(data, ["c", "results", side, measurement])
 
-                    if measurement == 'angMinAtFullStance':
+                    if measurement == "angMinAtFullStance":
                         vecs = _extract_minmax_vector(all_data, joint_names, side_c)
                         row_parts.append(vecs)
                         for j in joint_names:
                             header_parts += _joint_headers(prefix=f"Min_{side_c}", joint=j)
 
-                    elif measurement == 'angMaxAtFullStance':
+                    elif measurement == "angMaxAtFullStance":
                         vecs = _extract_minmax_vector(all_data, joint_names, side_c)
                         row_parts.append(vecs)
                         for j in joint_names:
                             header_parts += _joint_headers(prefix=f"Max_{side_c}", joint=j)
 
-                    elif measurement == 'baseSustentation':
-                        val = _scalar_from_mat_field(all_data[0, 0]['maxPreMoyenne'][0])
+                    elif measurement == "baseSustentation":
+                        val = _scalar_from_mat_field(all_data[0, 0]["maxPreMoyenne"][0])
                         row_parts.append(np.array([val]))
                         header_parts.append(f"Max_{side}_{'BOS'}")
 

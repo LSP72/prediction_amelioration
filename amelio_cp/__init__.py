@@ -1,4 +1,3 @@
-
 from amelio_cp.processing.process import Process
 from amelio_cp.models.classification.svc_model import SVCModel
 from amelio_cp.models.classification.rfc_model import RFCModel

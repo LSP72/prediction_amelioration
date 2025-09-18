@@ -12,10 +12,10 @@ rmse_scores = dict()
 
 for i in nb_samples:
     SVR = SVRModel()
-    SVR.add_data(x_train1[:i],y_train1[:i])
+    SVR.add_data(x_train1[:i], y_train1[:i])
     training = SVR.train_and_tune(100)
-    R2 = training['R²']
-    rmse = np.sqrt(training['MSE'])
-    it=str(i)
-    r2_scores[it]=R2
-    rmse_scores[it]=rmse
+    R2 = training["R²"]
+    rmse = np.sqrt(training["MSE"])
+    it = str(i)
+    r2_scores[it] = R2
+    rmse_scores[it] = rmse
