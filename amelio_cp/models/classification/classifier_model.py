@@ -2,6 +2,7 @@ import pandas as pd
 from amelio_cp.optimisation.optimisation_methods import OptimisationMethods
 from sklearn.model_selection import RandomizedSearchCV, KFold, cross_val_score
 from sklearn.metrics import accuracy_score
+import joblib
 
 
 # %% Base Model for classification
@@ -9,17 +10,12 @@ class ClassifierModel:
     def __init__(self):
         # self.name = name          # can name the model to call them then (i.e.SVRModel("Model A")), or can only initiate then such as model_A = SVRModel()
         self.model = None  # will store the best SVR model, updated each time
-        self.X = (
-            None  # features of training dataset, start with nothing, but will be completed each time w/ a new sample
-        )
+        self.X = None  # features of training dataset, start with nothing, but will be completed each time w/ a new sample
         self.y = None  # labels of training dataset, IDEM
-        self.best_params_ = (
-            None  # stores the best parameters, and updates it everytime the addition of a sample allows better results
-        )
+        self.best_params = None  # stores the best parameters, and updates it everytime the addition of a sample allows better results
 
         # to be defined in child classes
         self.pipeline = None  # i.e., Pipeline([("scaler", StandardScaler()), ("svc", SVC())])
-        self.param_distributions = None
         self.primary_scoring = None
         self.secondary_scoring = None
 
@@ -97,28 +93,35 @@ class ClassifierModel:
         # Define search space
         pbounds = self.param_distributions
 
-        # Create a pipeline for the model: scaling + SVR - everydata will pas through that order
-        pipeline_svc = self.pipeline
-
         # Creating the optimisation loop
         if method == "random":
-            search = OptimisationMethods.random_search(pipeline_svc, pbounds, n_iter, k_folds=5)
-        elif method == "bayesian":
-            search = OptimisationMethods.bayesian_search(
-                pipeline_svc, model, self.X, self.y, pbounds, n_iter, k_folds=5
-            )
+            search = OptimisationMethods.random_search(self.pipeline, pbounds, n_iter, k_folds=5, primary_scoring=self.primary_scoring)
+            search.fit(self.X, self.y)  # training
+            # self.model = search.best_estimator_  # recover the best model
+            # self.best_params = search.best_params_  # recover the best hp
+            print("Random search optimisation completed.")
 
-        search.fit(self.X, self.y)  # training
+        elif method == "bayesian":
+            search = OptimisationMethods.bayesian_search('SVC', self.pipeline, n_iter, k_folds=5, primary_scoring=self.primary_scoring)
+            search.fit(self.X, self.y)  # training
+            print("Byesian Search optimisation completed.")
+
+        elif method == "bayesian_optim":
+            search = OptimisationMethods.bayesian_optim(self.pipeline, self.X, self.y)
+            print("Bayesian optimisation completed.")
+
+        else:
+            raise ValueError("❌ Unknown optimisation method. Choose 'random', 'bayesian' or 'bayesian_optim'.")
+        
 
         self.model = search.best_estimator_  # recover the best model
-        self.best_params_ = search.best_params_  # recover the best hp
-        print("✅ Optimisation completed and model trained.")
-
+        self.best_params = search.best_params_  # recover the best hp
+        
         # Evaluate
         preds = self.model.predict(self.X)  # quick check to see if model OK (no overfitting)
         acc = accuracy_score(self.y, preds)  # IDEM
-        print(f"Best Params: {self.best_params_}")
-        print(f"Accuracy: {acc:.4f}")
+        print(f"Best Params: {self.best_params}")
+        print(f"Accuracy on training data: {acc:.4f}")
 
         # Evaluate with K-Fold CV for stability
         # K-Fold CV setup
@@ -149,7 +152,7 @@ class ClassifierModel:
 
     def save(self, path):
         """Save model and training data."""
-        joblib.dump({"model": self.model, "X": self.X, "y": self.y, "best_params": self.best_params_}, path)
+        joblib.dump({"model": self.model, "X": self.X, "y": self.y, "best_params": self.best_params}, path)
         print(f"💾 Model saved to {path}")
 
     @classmethod
@@ -163,3 +166,5 @@ class ClassifierModel:
         obj.best_params_ = data["best_params"]
         print(f"📂 Model loaded from {path}")
         return obj
+
+# %%

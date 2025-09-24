@@ -18,7 +18,7 @@ class LinearModel:
             None  # features of training dataset, start with nothing, but will be completed each time w/ a new sample
         )
         self.y = None  # labels of training dataset, IDEM
-        self.best_params_ = (
+        self.best_params = (
             None  # stores the best parameters, and updates it everytime the addition of a sample allows better results
         )
 
@@ -57,7 +57,7 @@ class LinearModel:
             # "auto" = 1/n_features
         }
 
-        # Create a pipeline for the model: scaling + SVR - everydata will pas through that order
+        # Create a pipeline for the model: scaling + SVR - every data will pas through that order
         pipeline_svr = Pipeline([("scaler", StandardScaler()), ("svr", SVR())])
 
         # Creating the optimisation loop
@@ -114,14 +114,14 @@ class LinearModel:
         search.fit(self.X, self.y)  # training
 
         self.model = search.best_estimator_  # recover the best model
-        self.best_params_ = search.best_params_  # recover the best hp
+        self.best_params = search.best_params_  # recover the best hp
         print("✅ Optimisation completed and model trained.")
 
         # Evaluate
         preds = self.model.predict(self.X)  # quick check to see if model OK (no overfitting)
         r2 = r2_score(self.y, preds)  # IDEM
         mse = mean_squared_error(self.y, preds)  # IDEM
-        print(f"Best Params: {self.best_params_}")
+        print(f"Best Params: {self.best_params}")
         print(f"R²: {r2:.4f}, MSE: {mse:.4f}")
 
         # Evaluate with K-Fold CV for stability
@@ -154,7 +154,7 @@ class LinearModel:
 
     def save(self, path):
         """Save model and training data."""
-        joblib.dump({"model": self.model, "X": self.X, "y": self.y, "best_params": self.best_params_}, path)
+        joblib.dump({"model": self.model, "X": self.X, "y": self.y, "best_params": self.best_params}, path)
         print(f"💾 Model saved to {path}")
 
     @classmethod
