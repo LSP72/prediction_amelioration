@@ -1,6 +1,6 @@
 *.pyc
 external_files
-dataset
+datasets
 examples/results
 examples/sandbox
 *.json
