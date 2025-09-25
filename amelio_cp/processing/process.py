@@ -8,7 +8,7 @@ class Process:
         pass
 
     def load_csv(file_path: str) -> DataFrame:
-        df = pd.read_csv(file_path)
+        df = pd.read_csv(file_path, index_col=False)
         return df
 
     @staticmethod
