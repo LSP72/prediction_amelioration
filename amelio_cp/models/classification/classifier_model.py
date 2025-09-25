@@ -19,6 +19,8 @@ class ClassifierModel:
         self.primary_scoring = None
         self.secondary_scoring = None
 
+        self.shap_analysis = None  # to store the shap analysis object if needed
+
     def add_data(self, X, y):
         """Function that will add new samples to the training set."""
         X = pd.DataFrame(X)  # pandas conversion
