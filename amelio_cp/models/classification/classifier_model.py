@@ -10,6 +10,7 @@ import joblib
 # %% Base Model for classification
 class ClassifierModel:
     def __init__(self):
+        # TODO: variable and function names explicit at 1st read
         self.name = None          # can name the model to call them then (i.e.SVRModel("Model A")), or can only initiate then such as model_A = SVRModel()
         self.model = None  # will store the best model, should be updated each time
         self.scaler = StandardScaler()
@@ -20,6 +21,7 @@ class ClassifierModel:
         self.X_test_scaled = None
         self.y_test = None
         self.best_params = None  # stores the best parameters, and updates it everytime the addition of a sample allows better results
+
 
     # TODO: decide whether you need them or not
         # to be defined in child classes
@@ -32,65 +34,32 @@ class ClassifierModel:
 
     def add_train_data(self, X, y):
         """Function that will add new samples to the training set."""
-        X = pd.DataFrame(X)  # pandas conversion
-        y = pd.Series(y)
-
-        if self.X is None:  # if nothing, will just take it
-            self.X = X
-            self.y = y
-        else:  # if already with something in, will append the new sample
-            self.X = pd.concat([self.X, X], ignore_index=True)
-            self.y = pd.concat([self.y, y], ignore_index=True)
-
+        self.X, self.y = self._add_template(X, y, self.X, self.y)
         self.X_scaled = self.scaler.fit_transform(self.X)
 
     def add_test_data(self, X, y):
         """Function that will add new samples to the training set."""
-        X = pd.DataFrame(X)  # pandas conversion
-        y = pd.Series(y)
-
-        if self.X_test is None:  # if nothing, will just take it
-            self.X_test = X
-            self.y_test = y
-        else:  # if already with something in, will append the new sample
-            self.X_test = pd.concat([self.X_test, X], ignore_index=True)
-            self.y_test = pd.concat([self.y_test, y], ignore_index=True)
-        
+        self.X_test, self.y_test = self._add_template(X, y, self.X_test, self.y_test)
         self.X_test_scaled = self.scaler.transform(self.X_test)
 
-    # def scale(self):
-    #     scaler = StandardScaler()
-    #     self.X_scaled = scaler.fit_transform(self.X)
-    #     self.X_test_scaled = scaler.fit(self.X_test)
-
-    def add_data(self, X, y, test_size):
+    def add_data(self, X, y, test_size): 
         x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=72)        
         print('✅ Split has been done.', flush=True)
-        
-        x_train = pd.DataFrame(x_train)
-        y_train = pd.DataFrame(y_train)
-        x_test = pd.DataFrame(x_test)
-        y_test = pd.DataFrame(y_test)
+        self.add_train_data(x_train, y_train)
+        self.add_test_data(x_test, y_test)
 
-        # adding the train data and scaling the xs
-        if self.X is None:  # if nothing, will just take it
-            self.X = x_train
-            self.y = y_train
+    @staticmethod
+    def _add_template(X_given, y_given, X_model, y_model):
+        X_given = pd.DataFrame(X_given)  # pandas conversion
+        y_given = pd.Series(y_given)
+
+        if X_model is None:  # if nothing, will just take it
+            X_model = X_given
+            y_model = y_given
         else:  # if already with something in, will append the new sample
-            self.X = pd.concat([self.X, x_train], ignore_index=True)
-            self.y = pd.concat([self.y, y_train], ignore_index=True)
-
-        self.X_scaled = self.scaler.fit_transform(self.X)
-
-        # adding the test data and scaling the xs
-        if self.X_test is None:  # if nothing, will just take it
-            self.X_test = x_test
-            self.y_test = y_test
-        else:  # if already with something in, will append the new sample
-            self.X_test = pd.concat([self.X_test, x_test], ignore_index=True)
-            self.y_test = pd.concat([self.y_test, y_test], ignore_index=True)
-        
-        self.X_test_scaled = self.scaler.transform(self.X_test)
+            X_model = pd.concat([X_model, X_given], ignore_index=True)
+            y_model = pd.concat([y_model, y_given], ignore_index=True)
+        return X_model, y_model
 
 
     def perf_estimate(self, n_iter):
@@ -173,7 +142,6 @@ class ClassifierModel:
         else:
             raise ValueError("❌ Unknown optimisation method. Choose 'random', 'bayesian' or 'bayesian_optim'.")
         
-
         self.model = search.best_estimator_  # recover the best model
         self.best_params = search.best_params_  # recover the best hp
         
@@ -204,6 +172,7 @@ class ClassifierModel:
             raise ValueError("Model has not been optimised yet.")
         return self.model.fit(X, y)
 
+    # TODO: (Mathilde) rewrite to consider the new definiton of the class
     def save(self, path):
         """Save model and training data."""
         joblib.dump({"model": self.model, "X": self.X, "y": self.y, "best_params": self.best_params}, path)

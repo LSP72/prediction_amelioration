@@ -14,10 +14,10 @@ class OptimisationMethods:
     def random_search(model, pbounds, n_iter, k_folds, primary_scoring):
         
         pbounds = {
-            "svc__C": uniform(1, 1000), 
-            "svc__gamma": uniform(0.001, 0.1),
-            "svc__degree": randint(2, 5), 
-            "svc__kernel": ["linear", "poly", "rbf"],  # categorical options
+            "C": uniform(1, 1000), 
+            "gamma": uniform(0.001, 0.1),
+            "degree": randint(2, 5), 
+            "kernel": ["linear", "poly", "rbf"],  # categorical options
         }
         
         print("⚙️ Starting RandomizedSearchCV optimisation...")
