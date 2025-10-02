@@ -2,26 +2,34 @@ import pandas as pd
 from amelio_cp.optimisation.optimisation_methods import OptimisationMethods
 from sklearn.model_selection import RandomizedSearchCV, KFold, cross_val_score
 from sklearn.metrics import accuracy_score
+from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import train_test_split
 import joblib
 
 
 # %% Base Model for classification
 class ClassifierModel:
     def __init__(self):
-        # self.name = name          # can name the model to call them then (i.e.SVRModel("Model A")), or can only initiate then such as model_A = SVRModel()
-        self.model = None  # will store the best SVR model, updated each time
-        self.X = None  # features of training dataset, start with nothing, but will be completed each time w/ a new sample
+        self.name = None          # can name the model to call them then (i.e.SVRModel("Model A")), or can only initiate then such as model_A = SVRModel()
+        self.model = None  # will store the best model, should be updated each time
+        self.scaler = StandardScaler()
+        self.X = None # features of training dataset, start with nothing, but will be completed each time w/ a new sample
+        self.X_scaled = None  
         self.y = None  # labels of training dataset, IDEM
+        self.X_test = None
+        self.X_test_scaled = None
+        self.y_test = None
         self.best_params = None  # stores the best parameters, and updates it everytime the addition of a sample allows better results
 
         # to be defined in child classes
-        self.pipeline = None  # i.e., Pipeline([("scaler", StandardScaler()), ("svc", SVC())])
         self.primary_scoring = None
         self.secondary_scoring = None
-
         self.shap_analysis = None  # to store the shap analysis object if needed
 
-    def add_data(self, X, y):
+    # TODO: collect feature keys    
+    # TODO: checking if the test data are in the same order than train ones
+
+    def add_train_data(self, X, y):
         """Function that will add new samples to the training set."""
         X = pd.DataFrame(X)  # pandas conversion
         y = pd.Series(y)
@@ -32,6 +40,28 @@ class ClassifierModel:
         else:  # if already with something in, will append the new sample
             self.X = pd.concat([self.X, X], ignore_index=True)
             self.y = pd.concat([self.y, y], ignore_index=True)
+
+        self.X_scaled = self.scaler.fit_transform(self.X)
+
+    def add_test_data(self, X, y):
+        """Function that will add new samples to the training set."""
+        X = pd.DataFrame(X)  # pandas conversion
+        y = pd.Series(y)
+
+        if self.X_test is None:  # if nothing, will just take it
+            self.X_test = X
+            self.y_test = y
+        else:  # if already with something in, will append the new sample
+            self.X_test = pd.concat([self.X_test, X], ignore_index=True)
+            self.y_test = pd.concat([self.y_test, y], ignore_index=True)
+        
+        self.X_test_scaled = self.scaler.transform(self.X_test)
+
+    # def scale(self):
+    #     scaler = StandardScaler()
+    #     self.X_scaled = scaler.fit_transform(self.X)
+    #     self.X_test_scaled = scaler.fit(self.X_test)
+        
 
     def perf_estimate(self, n_iter):
         """Check for the overall perf of the model with nested CV method"""
@@ -97,19 +127,19 @@ class ClassifierModel:
 
         # Creating the optimisation loop
         if method == "random":
-            search = OptimisationMethods.random_search(self.pipeline, pbounds, n_iter, k_folds=5, primary_scoring=self.primary_scoring)
-            search.fit(self.X, self.y)  # training
+            search = OptimisationMethods.random_search(self.model, pbounds, n_iter, k_folds=5, primary_scoring=self.primary_scoring)
+            search.fit(self.X_scaled, self.y)  # training
             # self.model = search.best_estimator_  # recover the best model
             # self.best_params = search.best_params_  # recover the best hp
             print("Random search optimisation completed.")
 
         elif method == "bayesian":
-            search = OptimisationMethods.bayesian_search('SVC', self.pipeline, n_iter, k_folds=5, primary_scoring=self.primary_scoring)
-            search.fit(self.X, self.y)  # training
+            search = OptimisationMethods.bayesian_search('SVC', self.model, n_iter, k_folds=5, primary_scoring=self.primary_scoring)
+            search.fit(self.X_scaled, self.y)  # training
             print("Byesian Search optimisation completed.")
 
         elif method == "bayesian_optim":
-            search = OptimisationMethods.bayesian_optim(self.pipeline, self.X, self.y)
+            search = OptimisationMethods.bayesian_optim(self.model, self.X_scaled, self.y)
             print("Bayesian optimisation completed.")
 
         else:
@@ -120,7 +150,7 @@ class ClassifierModel:
         self.best_params = search.best_params_  # recover the best hp
         
         # Evaluate
-        preds = self.model.predict(self.X)  # quick check to see if model OK (no overfitting)
+        preds = self.model.predict(self.X_scaled)  # quick check to see if model OK (no overfitting)
         acc = accuracy_score(self.y, preds)  # IDEM
         print(f"Best Params: {self.best_params}")
         print(f"Accuracy on training data: {acc:.4f}")
@@ -128,7 +158,7 @@ class ClassifierModel:
         # Evaluate with K-Fold CV for stability
         # K-Fold CV setup
         cv_splitter = KFold(n_splits=5, shuffle=True, random_state=72)
-        cv_acc = cross_val_score(self.model, self.X, self.y, cv=cv_splitter, scoring="accuracy")
+        cv_acc = cross_val_score(self.model, self.X_scaled, self.y, cv=cv_splitter, scoring="accuracy")
         print(f"📊 CV accuracy: {cv_acc.mean():.4f} ± {cv_acc.std():.4f}")
 
         return {
@@ -146,12 +176,6 @@ class ClassifierModel:
             raise ValueError("Model has not been optimised yet.")
         return self.model.fit(X, y)
 
-    def predict(self, X):
-        """Make predictions with the trained model."""
-        if self.model is None:
-            raise ValueError("Model has not been trained yet.")
-        return self.model.predict(X)
-
     def save(self, path):
         """Save model and training data."""
         joblib.dump({"model": self.model, "X": self.X, "y": self.y, "best_params": self.best_params}, path)
@@ -168,5 +192,3 @@ class ClassifierModel:
         obj.best_params_ = data["best_params"]
         print(f"📂 Model loaded from {path}")
         return obj
-
-# %%

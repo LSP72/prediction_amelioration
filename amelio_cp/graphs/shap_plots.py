@@ -1,42 +1,37 @@
 import shap
 from pandas import DataFrame
 import matplotlib.pyplot as plt
+from sklearn.utils.validation import check_is_fitted
+
+# KEY = ['vitesse', ']
 
 class SHAPPlots:
     def __init__(self):
         pass
 
     @staticmethod
-    def shap_values_calculation(trained_model, model_name, X_train, X_test):
+    def shap_values_calculation(trained_model):
 
-        model = trained_model.model.named_steps[model_name]
-        scaler = trained_model.model.named_steps['scaler']
-        X_train_scaled = scaler.transform(X_train)
-        X_test_scaled = scaler.transform(X_test)
+        try:
+            check_is_fitted(trained_model.model)
+        except:
+            raise ValueError("❌ Model is not fitted yet!")
 
-        explainer = shap.KernelExplainer(model.predict, X_train_scaled)
-        shap_values = explainer.shap_values(X_test_scaled)
+        explainer = shap.KernelExplainer(trained_model.model.predict, trained_model.X_scaled)    # bug potentiel
+        shap_values = explainer.shap_values(trained_model.X_test_scaled)
 
         return {'explainer': explainer,
                 'shap_values': shap_values}
     
     @staticmethod
-    def plot_shap_summary(train_model, model_name, features_names:list, X_train:DataFrame, X_test:DataFrame):
-        
-        # model = train_model.named_steps[model_name]
-        scaler = train_model.model.named_steps['scaler']
-        # X_train_scaled = scaler.transform(X_train)
-        X_test_scaled = scaler.transform(X_test)
-
-        # explainer = shap.KernelExplainer(model.predict, X_train_scaled)
-        # shap_values = explainer.shap_values(X_test_scaled)
-        
-        shap_values = train_model.shap_analysis['shap_values']
+    def plot_shap_summary(trained_model, features_names:list):
+             
+        shap_values = trained_model.shap_analysis['shap_values']
 
         shap.summary_plot(
             shap_values, 
-            X_test_scaled,
-            feature_names=features_names,
+            trained_model.X_test_scaled,
+            feature_names=features_names, # model.feature_keys
             max_display=len(features_names),
             plot_size=(10, 12), 
             show=False  # Prevent SHAP from auto-displaying

@@ -11,12 +11,12 @@ class OptimisationMethods:
         pass
 
     @staticmethod
-    def random_search(pipeline, pbounds, n_iter, k_folds, primary_scoring):
+    def random_search(model, pbounds, n_iter, k_folds, primary_scoring):
         
         pbounds = {
-            "svc__C": uniform(1, 999),          # samples in [1, 1000)
-            "svc__gamma": uniform(0.001, 0.999), # samples in [0.001, 1)
-            "svc__degree": randint(2, 6),       # integers {2, 3, 4, 5}
+            "svc__C": uniform(1, 1000), 
+            "svc__gamma": uniform(0.001, 0.1),
+            "svc__degree": randint(2, 5), 
             "svc__kernel": ["linear", "poly", "rbf"],  # categorical options
         }
         
@@ -25,7 +25,7 @@ class OptimisationMethods:
         cv_splitter = KFold(n_splits=k_folds, shuffle=True, random_state=72)
 
         search = RandomizedSearchCV(
-            pipeline,
+            model,
             param_distributions=pbounds,
             n_iter=n_iter,
             scoring=primary_scoring,
@@ -38,7 +38,7 @@ class OptimisationMethods:
         return search
 
     @staticmethod
-    def bayesian_search(model, pipeline, n_iter, k_folds, primary_scoring):
+    def bayesian_search(model, n_iter, k_folds, primary_scoring):
         print("⚙️ Starting Bayesian Search Optimization...")
         if model == 'SVC':
             pbounds = {
@@ -51,7 +51,7 @@ class OptimisationMethods:
         cv_splitter = KFold(n_splits=k_folds, shuffle=True, random_state=72)
 
         search = BayesSearchCV(
-            pipeline,
+            model,
             search_spaces=pbounds,
             n_iter=n_iter,
             scoring=primary_scoring,
@@ -64,7 +64,7 @@ class OptimisationMethods:
         return search
 
     @staticmethod
-    def bayesian_optim(pipeline, X, y):
+    def bayesian_optim(model, X, y):
         
         pbounds = {
             "svc__C": (1, 1000),
@@ -76,14 +76,14 @@ class OptimisationMethods:
 
         def svm_model(svc__C, svc__gamma, svc__degree, svc__kernel):
             params = {
-                "svc__C": svc__C,
-                "svc__gamma": svc__gamma,
-                "svc__degree": int(svc__degree),
-                "svc__kernel": kernel_options[int(svc__kernel)]
+                "C": svc__C,
+                "gamma": svc__gamma,
+                "degree": int(svc__degree),
+                "kernel": kernel_options[int(svc__kernel)]
             }
-            model = pipeline.set_params(**params)
+            try_model = model.set_params(**params)
             cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
-            scores = cross_val_score(model, X, y, cv=cv, scoring='accuracy')
+            scores = cross_val_score(try_model, X, y, cv=cv, scoring='accuracy')
             return scores.mean()
 
         print("⚙️ Starting Bayesian optimisation...")
@@ -95,7 +95,14 @@ class OptimisationMethods:
         best_params['svc__C'] = float(best_params['svc__C'])  # Convert to float
         best_params['svc__kernel'] = kernel_options[int(best_params['svc__kernel'])]  # Map back to string
 
-        best_model = pipeline.set_params(**best_params)
+        final_params = {
+            "C": float(best_params['svc__C']),
+            "gamma": float(best_params['svc__gamma']),
+            "degree": int(best_params['svc__degree']),
+            "kernel": best_params['svc__kernel']
+        }
+            
+        best_model = model.set_params(**final_params)
         best_model.fit(X, y)
 
         class ResultWrapper:

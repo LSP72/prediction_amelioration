@@ -10,7 +10,8 @@ class SVCModel(ClassifierModel):
     def __init__(self):
         super().__init__()
 
-        self.pipeline = Pipeline([("scaler", StandardScaler()), ("svc", SVC())])
+        self.name = 'svc'
+        self.model = SVC()
         self.param_distributions = {
             "svc__C": uniform(1, 500),
             "svc__degree": [2, 3, 4],

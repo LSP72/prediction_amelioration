@@ -60,7 +60,7 @@ class Process:
         # ----- Add Label -----
         df.drop(["delta6MWT", "deltaV"], axis=1, inplace=True)
         # This line excludes some of the features that are in the demographic excel file.
-        df.drop(["Patient", "masse", "taille" "sex", "Diagnostique"], axis=1, inplace=True)
+        df.drop(["Patient", "masse", "taille", "sex", "Diagnostique"], axis=1, inplace=True)
 
         return df
 
