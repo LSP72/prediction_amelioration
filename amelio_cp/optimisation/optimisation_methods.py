@@ -40,13 +40,13 @@ class OptimisationMethods:
     @staticmethod
     def bayesian_search(model, n_iter, k_folds, primary_scoring):
         print("⚙️ Starting Bayesian Search Optimization...")
-        if model == 'SVC':
-            pbounds = {
-                'svc__C': Real(1, 1e+3, prior='log-uniform'),
-                'svc__gamma': Real(1e-3, 1, prior='log-uniform'),
-                'svc__degree': Integer(2,5),
-                'svc__kernel': Categorical(['linear', 'poly', 'rbf']),
-            }
+    
+        pbounds = {
+            'C': Real(1, 1e+3, prior='log-uniform'),
+            'gamma': Real(1e-3, 1, prior='log-uniform'),
+            'degree': Integer(2,5),
+            'kernel': Categorical(['linear', 'poly', 'rbf']),
+        }
 
         cv_splitter = KFold(n_splits=k_folds, shuffle=True, random_state=72)
 
