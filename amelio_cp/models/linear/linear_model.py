@@ -13,19 +13,23 @@ import joblib
 class LinearModel:
     def __init__(self):
         # self.name = name          # can name the model to call them then (i.e.SVRModel("Model A")), or can only initiate then such as model_A = SVRModel()
-        self.model = None  # will store the best SVR model, updated each time
-        self.X = (
-            None  # features of training dataset, start with nothing, but will be completed each time w/ a new sample
-        )
+        self.name = None          # can name the model to call them then (i.e.SVRModel("Model A")), or can only initiate then such as model_A = SVRModel()
+        self.model = None  # will store the best model, should be updated each time
+        self.scaler = StandardScaler()
+        self.X = None # features of training dataset, start with nothing, but will be completed each time w/ a new sample
+        self.X_scaled = None  
         self.y = None  # labels of training dataset, IDEM
-        self.best_params = (
-            None  # stores the best parameters, and updates it everytime the addition of a sample allows better results
-        )
+        self.X_test = None
+        self.X_test_scaled = None
+        self.y_test = None
+        self.best_params = None  # stores the best parameters, and updates it everytime the addition of a sample allows better results
 
-        self.pipeline = None  # i.e., Pipeline([("scaler", StandardScaler()), ("svr", SVR())])
-        self.param_distributions = None
+        # to be defined in child classes
+        self.primary_scoring = None
+        self.secondary_scoring = None
+        self.shap_analysis = None
 
-    def add_data(self, X, y):
+    def add_train_data(self, X, y):
         """Function that will add new samples to the training set."""
         X = pd.DataFrame(X)  # pandas conversion
         y = pd.Series(y)
@@ -37,6 +41,22 @@ class LinearModel:
             self.X = pd.concat([self.X, X], ignore_index=True)
             self.y = pd.concat([self.y, y], ignore_index=True)
 
+        self.X_scaled = self.scaler.fit_transform(self.X)
+
+    def add_test_data(self, X, y):
+        """Function that will add new samples to the training set."""
+        X = pd.DataFrame(X)  # pandas conversion
+        y = pd.Series(y)
+
+        if self.X_test is None:  # if nothing, will just take it
+            self.X_test = X
+            self.y_test = y
+        else:  # if already with something in, will append the new sample
+            self.X_test = pd.concat([self.X_test, X], ignore_index=True)
+            self.y_test = pd.concat([self.y_test, y], ignore_index=True)
+        
+        self.X_test_scaled = self.scaler.transform(self.X_test)
+        
     def perf_estimate(self, n_iter):
         """Check for the overall perf of the model with nested CV method"""
 
