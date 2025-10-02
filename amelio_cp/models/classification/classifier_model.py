@@ -21,6 +21,7 @@ class ClassifierModel:
         self.y_test = None
         self.best_params = None  # stores the best parameters, and updates it everytime the addition of a sample allows better results
 
+    # TODO: decide whether you need them or not
         # to be defined in child classes
         self.primary_scoring = None
         self.secondary_scoring = None
@@ -61,7 +62,36 @@ class ClassifierModel:
     #     scaler = StandardScaler()
     #     self.X_scaled = scaler.fit_transform(self.X)
     #     self.X_test_scaled = scaler.fit(self.X_test)
+
+    def add_data(self, X, y, test_size):
+        x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=72)        
+        print('✅ Split has been done.', flush=True)
         
+        x_train = pd.DataFrame(x_train)
+        y_train = pd.DataFrame(y_train)
+        x_test = pd.DataFrame(x_test)
+        y_test = pd.DataFrame(y_test)
+
+        # adding the train data and scaling the xs
+        if self.X is None:  # if nothing, will just take it
+            self.X = x_train
+            self.y = y_train
+        else:  # if already with something in, will append the new sample
+            self.X = pd.concat([self.X, x_train], ignore_index=True)
+            self.y = pd.concat([self.y, y_train], ignore_index=True)
+
+        self.X_scaled = self.scaler.fit_transform(self.X)
+
+        # adding the test data and scaling the xs
+        if self.X_test is None:  # if nothing, will just take it
+            self.X_test = x_test
+            self.y_test = y_test
+        else:  # if already with something in, will append the new sample
+            self.X_test = pd.concat([self.X_test, x_test], ignore_index=True)
+            self.y_test = pd.concat([self.y_test, y_test], ignore_index=True)
+        
+        self.X_test_scaled = self.scaler.transform(self.X_test)
+
 
     def perf_estimate(self, n_iter):
         """Check for the overall perf of the model with nested CV method"""
@@ -129,12 +159,10 @@ class ClassifierModel:
         if method == "random":
             search = OptimisationMethods.random_search(self.model, pbounds, n_iter, k_folds=5, primary_scoring=self.primary_scoring)
             search.fit(self.X_scaled, self.y)  # training
-            # self.model = search.best_estimator_  # recover the best model
-            # self.best_params = search.best_params_  # recover the best hp
             print("Random search optimisation completed.")
 
         elif method == "bayesian":
-            search = OptimisationMethods.bayesian_search('SVC', self.model, n_iter, k_folds=5, primary_scoring=self.primary_scoring)
+            search = OptimisationMethods.bayesian_search(self.model, n_iter, k_folds=5, primary_scoring=self.primary_scoring)
             search.fit(self.X_scaled, self.y)  # training
             print("Byesian Search optimisation completed.")
 
