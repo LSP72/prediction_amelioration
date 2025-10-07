@@ -32,22 +32,26 @@ class ClassifierModel:
     # TODO: collect feature keys    
     # TODO: checking if the test data are in the same order than train ones
 
+    # Specific function to add the training data
     def add_train_data(self, X, y):
         """Function that will add new samples to the training set."""
         self.X, self.y = self._add_template(X, y, self.X, self.y)
         self.X_scaled = self.scaler.fit_transform(self.X)
 
+    # Specific function to add the testing data
     def add_test_data(self, X, y):
         """Function that will add new samples to the training set."""
         self.X_test, self.y_test = self._add_template(X, y, self.X_test, self.y_test)
         self.X_test_scaled = self.scaler.transform(self.X_test)
 
+    # Function that splits and adds datasets
     def add_data(self, X, y, test_size): 
         x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=72)        
         print('✅ Split has been done.', flush=True)
         self.add_train_data(x_train, y_train)
         self.add_test_data(x_test, y_test)
 
+    # Function that handles and correctly stores the data
     @staticmethod
     def _add_template(X_given, y_given, X_model, y_model):
         X_given = pd.DataFrame(X_given)  # pandas conversion
@@ -61,7 +65,7 @@ class ClassifierModel:
             y_model = pd.concat([y_model, y_given], ignore_index=True)
         return X_model, y_model
 
-
+    # Function that estimates the perf of the model // NOT USED FOR NOW
     def perf_estimate(self, n_iter):
         """Check for the overall perf of the model with nested CV method"""
 
@@ -116,17 +120,18 @@ class ClassifierModel:
 
         return results
 
+    # Function that optimises and trains the model
     def train_and_tune(self, method: str, n_iter=100):
         """Tune hyperparameters with choosen method and fit the model."""
         if self.X is None or self.y is None:  # Check if there is some data
             raise ValueError("❌ No data available for training.")
 
-        # Define search space
-        pbounds = self.param_distributions
+        # # Define search space
+        # pbounds = self.param_distributions
 
         # Creating the optimisation loop
         if method == "random":
-            search = OptimisationMethods.random_search(self.model, pbounds, n_iter, k_folds=5, primary_scoring=self.primary_scoring)
+            search = OptimisationMethods.random_search(self.model, n_iter, k_folds=5, primary_scoring=self.primary_scoring)
             search.fit(self.X_scaled, self.y)  # training
             print("Random search optimisation completed.")
 

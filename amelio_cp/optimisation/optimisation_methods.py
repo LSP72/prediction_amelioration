@@ -11,7 +11,7 @@ class OptimisationMethods:
         pass
 
     @staticmethod
-    def random_search(model, pbounds, n_iter, k_folds, primary_scoring):
+    def random_search(model, n_iter, k_folds, primary_scoring):
         
         pbounds = {
             "C": uniform(1, 1000), 
@@ -67,23 +67,23 @@ class OptimisationMethods:
     def bayesian_optim(model, X, y):
         
         pbounds = {
-            "svc__C": (1, 1000),
-            "svc__gamma": (0.001, 1),
-            "svc__degree": (2, 5),
-            "svc__kernel": (0, 2),  # 0: 'linear', 1: 'poly', 2: 'rbf'
+            "C": (1, 1000),
+            "gamma": (0.001, 1),
+            "degree": (2, 5),
+            "kernel": (0, 2),  # 0: 'linear', 1: 'poly', 2: 'rbf'
         }
         kernel_options = ['linear', 'poly', 'rbf']
 
-        def svm_model(svc__C, svc__gamma, svc__degree, svc__kernel):
+        def svm_model(C, gamma, degree, kernel):
             params = {
-                "C": svc__C,
-                "gamma": svc__gamma,
-                "degree": int(svc__degree),
-                "kernel": kernel_options[int(svc__kernel)]
+                "C": C,
+                "gamma": gamma,
+                "degree": int(degree),
+                "kernel": kernel_options[int(kernel)]
             }
-            try_model = model.set_params(**params)
+            model_to_optim = model.set_params(**params)
             cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
-            scores = cross_val_score(try_model, X, y, cv=cv, scoring='accuracy')
+            scores = cross_val_score(model_to_optim, X, y, cv=cv, scoring='accuracy')
             return scores.mean()
 
         print("⚙️ Starting Bayesian optimisation...")
@@ -91,15 +91,15 @@ class OptimisationMethods:
         optimizer = BayesianOptimization(f = svm_model, pbounds = pbounds, random_state=42, verbose=3)
         optimizer.maximize(init_points=10, n_iter=100) 
         best_params = optimizer.max['params']
-        best_params['svc__degree'] = int(best_params['svc__degree'])  # Convert to int
-        best_params['svc__C'] = float(best_params['svc__C'])  # Convert to float
-        best_params['svc__kernel'] = kernel_options[int(best_params['svc__kernel'])]  # Map back to string
+        best_params['degree'] = int(best_params['degree'])  # Convert to int
+        best_params['C'] = float(best_params['C'])  # Convert to float
+        best_params['kernel'] = kernel_options[int(best_params['kernel'])]  # Map back to string
 
         final_params = {
-            "C": float(best_params['svc__C']),
-            "gamma": float(best_params['svc__gamma']),
-            "degree": int(best_params['svc__degree']),
-            "kernel": best_params['svc__kernel']
+            "C": float(best_params['C']),
+            "gamma": float(best_params['gamma']),
+            "degree": int(best_params['degree']),
+            "kernel": best_params['kernel']
         }
             
         best_model = model.set_params(**final_params)
