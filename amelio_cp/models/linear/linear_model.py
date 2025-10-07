@@ -1,10 +1,10 @@
 import pandas as pd
 import numpy as np
-from sklearn.svm import SVR
-from sklearn.model_selection import RandomizedSearchCV, LeaveOneOut, cross_val_score, KFold
-from sklearn.pipeline import Pipeline
+from amelio_cp import OptimisationMethodsLin
+from sklearn.model_selection import RandomizedSearchCV, cross_val_score, KFold
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import r2_score, mean_squared_error
+from sklearn.model_selection import train_test_split
 from scipy.stats import uniform
 import joblib
 
@@ -12,7 +12,6 @@ import joblib
 # %% SVR
 class LinearModel:
     def __init__(self):
-        # self.name = name          # can name the model to call them then (i.e.SVRModel("Model A")), or can only initiate then such as model_A = SVRModel()
         self.name = None          # can name the model to call them then (i.e.SVRModel("Model A")), or can only initiate then such as model_A = SVRModel()
         self.model = None  # will store the best model, should be updated each time
         self.scaler = StandardScaler()
@@ -29,33 +28,38 @@ class LinearModel:
         self.secondary_scoring = None
         self.shap_analysis = None
 
+    # Specific function to add the training data
     def add_train_data(self, X, y):
         """Function that will add new samples to the training set."""
-        X = pd.DataFrame(X)  # pandas conversion
-        y = pd.Series(y)
-
-        if self.X is None:  # if nothing, will just take it
-            self.X = X
-            self.y = y
-        else:  # if already with something in, will append the new sample
-            self.X = pd.concat([self.X, X], ignore_index=True)
-            self.y = pd.concat([self.y, y], ignore_index=True)
-
+        self.X, self.y = self._add_template(X, y, self.X, self.y)
         self.X_scaled = self.scaler.fit_transform(self.X)
 
+    # Specific function to add the testing data
     def add_test_data(self, X, y):
         """Function that will add new samples to the training set."""
-        X = pd.DataFrame(X)  # pandas conversion
-        y = pd.Series(y)
-
-        if self.X_test is None:  # if nothing, will just take it
-            self.X_test = X
-            self.y_test = y
-        else:  # if already with something in, will append the new sample
-            self.X_test = pd.concat([self.X_test, X], ignore_index=True)
-            self.y_test = pd.concat([self.y_test, y], ignore_index=True)
-        
+        self.X_test, self.y_test = self._add_template(X, y, self.X_test, self.y_test)
         self.X_test_scaled = self.scaler.transform(self.X_test)
+
+    # Function that splits and adds datasets
+    def add_data(self, X, y, test_size): 
+        x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=72)        
+        print('✅ Split has been done.', flush=True)
+        self.add_train_data(x_train, y_train)
+        self.add_test_data(x_test, y_test)
+
+    # Function that handles and correctly stores the data
+    @staticmethod
+    def _add_template(X_given, y_given, X_model, y_model):
+        X_given = pd.DataFrame(X_given)  # pandas conversion
+        y_given = pd.Series(y_given)
+
+        if X_model is None:  # if nothing, will just take it
+            X_model = X_given
+            y_model = y_given
+        else:  # if already with something in, will append the new sample
+            X_model = pd.concat([X_model, X_given], ignore_index=True)
+            y_model = pd.concat([y_model, y_given], ignore_index=True)
+        return X_model, y_model
         
     def perf_estimate(self, n_iter):
         """Check for the overall perf of the model with nested CV method"""
@@ -104,32 +108,28 @@ class LinearModel:
             "CV RMSE std": cv_rmse.std(),
         }
 
-    def train_and_tune(self, n_iter=100):
+    def train_and_tune(self, method:str, n_iter=100):
         """Tune hyperparameters"""
         if self.X is None or self.y is None:  # Check if there is some data
             raise ValueError("No data available for training.")
 
-        cv = KFold(n_splits=5, shuffle=True, random_state=72)
+        if method == "random":
+            search = OptimisationMethodsLin.random_search(self.model, n_iter, k_folds=5, primary_scoring=self.primary_scoring)
+            search.fit(self.X_scaled, self.y)  # training
+            print("Random search optimisation completed.")
 
-        print(f"🔍 Starting hyperparameter search...")
+        elif method == "bayesian":
+            search = OptimisationMethods.bayesian_search(self.model, n_iter, k_folds=5, primary_scoring=self.primary_scoring)
+            search.fit(self.X_scaled, self.y)  # training
+            print("Byesian Search optimisation completed.")
 
-        # Define search space
-        pbounds = self.param_distributions
+        elif method == "bayesian_optim":
+            search = OptimisationMethods.bayesian_optim(self.model, self.X_scaled, self.y)
+            print("Bayesian optimisation completed.")
 
-        # Create a pipeline for the model: scaling + SVR - everydata will pas through that order
-        model_pipeline = self.pipeline
-
-        # Creating the optimisation loop
-        search = RandomizedSearchCV(
-            pipeline=model_pipeline,
-            param_distributions=pbounds,
-            n_iter=n_iter,
-            scoring="neg_mean_squared_error",  # will try to maximise r2
-            cv=cv,
-            random_state=72,
-            verbose=2,
-            n_jobs=1,
-        )
+        else:
+            raise ValueError("❌ Unknown optimisation method. Choose 'random', 'bayesian' or 'bayesian_optim'.")
+        
 
         search.fit(self.X, self.y)  # training
 
