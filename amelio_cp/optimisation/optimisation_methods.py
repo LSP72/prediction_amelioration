@@ -4,6 +4,7 @@ from bayes_opt import BayesianOptimization
 from sklearn.svm import SVC
 from skopt.space import Real, Integer, Categorical
 from scipy.stats import uniform, randint
+from sklearn import metrics, svm
 
 
 class OptimisationMethods:
@@ -11,7 +12,7 @@ class OptimisationMethods:
         pass
 
     @staticmethod
-    def random_search(model, pbounds, n_iter, k_folds, primary_scoring):
+    def random_search(model, search_spaces, n_iter, k_folds, primary_scoring):
         
         pbounds = {
             "C": uniform(1, 1000), 
@@ -22,7 +23,7 @@ class OptimisationMethods:
         
         print("⚙️ Starting RandomizedSearchCV optimisation...")
 
-        cv_splitter = KFold(n_splits=k_folds, shuffle=True, random_state=72)
+        cv_splitter = KFold(n_splits=k_folds, shuffle=True, random_state=42)
 
         search = RandomizedSearchCV(
             model,
@@ -30,7 +31,7 @@ class OptimisationMethods:
             n_iter=n_iter,
             scoring=primary_scoring,
             cv=cv_splitter,
-            random_state=72,
+            random_state=42,
             verbose=1,
             n_jobs=-1,
         )
@@ -38,25 +39,25 @@ class OptimisationMethods:
         return search
 
     @staticmethod
-    def bayesian_search(model, n_iter, k_folds, primary_scoring):
+    def bayesian_search(model, n_iter, k_folds):
         print("⚙️ Starting Bayesian Search Optimization...")
     
         pbounds = {
-            'C': Real(1, 1e+3, prior='log-uniform'),
-            'gamma': Real(1e-3, 1, prior='log-uniform'),
-            'degree': Integer(2,5),
-            'kernel': Categorical(['linear', 'poly', 'rbf']),
+            'C': Real(model.search_spaces['C'][0], model.search_spaces['C'][1], prior='log-uniform'),
+            'gamma': Real(model.search_spaces['gamma'][0], model.search_spaces['gamma'][1], prior='log-uniform'),
+            'degree': Integer(model.search_spaces['degree'][0], model.search_spaces['degree'][0]),
+            'kernel': Categorical(model.search_spaces['kernel']),
         }
 
-        cv_splitter = KFold(n_splits=k_folds, shuffle=True, random_state=72)
+        cv_splitter = KFold(n_splits=k_folds, shuffle=True, random_state=42)
 
         search = BayesSearchCV(
             model,
             search_spaces=pbounds,
             n_iter=n_iter,
-            scoring=primary_scoring,
+            scoring=model.primary_scoring,
             cv=cv_splitter,
-            random_state=72,
+            random_state=42,
             n_jobs=-1,
             verbose=1
         )
@@ -64,26 +65,26 @@ class OptimisationMethods:
         return search
 
     @staticmethod
-    def bayesian_optim(model, X, y):
+    def bayesian_optim(model, search_spaces, X, y, random_state):
         
         pbounds = {
-            "svc__C": (1, 1000),
-            "svc__gamma": (0.001, 1),
-            "svc__degree": (2, 5),
-            "svc__kernel": (0, 2),  # 0: 'linear', 1: 'poly', 2: 'rbf'
+            "svc__C": (search_spaces['C'][0], search_spaces['C'][1]),
+            "svc__gamma": (search_spaces['gamma'][0], search_spaces['gamma'][1]),
+            "svc__degree": (search_spaces['degree'][0], search_spaces['degree'][1]),
+            "svc__kernel": (0, len(search_spaces['kernel'])-1),  # 0: 'linear', 1: 'poly', 2: 'rbf'
         }
-        kernel_options = ['linear', 'poly', 'rbf']
+        kernel_options = search_spaces['kernel']
 
         def svm_model(svc__C, svc__gamma, svc__degree, svc__kernel):
             params = {
                 "C": svc__C,
                 "gamma": svc__gamma,
                 "degree": int(svc__degree),
-                "kernel": kernel_options[int(svc__kernel)]
+                "kernel": int(svc__kernel)
             }
-            try_model = model.set_params(**params)
+            SVM = svm.SVC(kernel=kernel_options[int(params['kernel'])], C=params['C'], gamma=params['gamma'], degree=int(params['degree']), random_state=42)
             cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
-            scores = cross_val_score(try_model, X, y, cv=cv, scoring='accuracy')
+            scores = cross_val_score(SVM, X, y, cv=cv, scoring='accuracy')
             return scores.mean()
 
         print("⚙️ Starting Bayesian optimisation...")
@@ -99,6 +100,7 @@ class OptimisationMethods:
             "C": float(best_params['svc__C']),
             "gamma": float(best_params['svc__gamma']),
             "degree": int(best_params['svc__degree']),
+            "random_state": random_state,
             "kernel": best_params['svc__kernel']
         }
             
@@ -111,3 +113,5 @@ class OptimisationMethods:
                 self.best_params_ = params
 
         return ResultWrapper(best_model, best_params)
+    
+    # function to convert the 

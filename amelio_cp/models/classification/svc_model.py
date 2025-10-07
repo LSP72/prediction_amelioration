@@ -11,13 +11,13 @@ class SVCModel(ClassifierModel):
         super().__init__()
 
         self.name = 'svc'
-        self.model = SVC()
-        self.param_distributions = {
-            "svc__C": uniform(1, 500),
-            "svc__degree": [2, 3, 4],
-            "svc__kernel": ["linear", "poly", "rbf"],
-            "svc__gamma": ["scale", "auto"],  # "scale" = 1/(n_features * X.var())
-            # "auto" = 1/n_features
-        }
+        self.model = SVC(probability=True)
+        self.search_spaces = {
+            "C": [1, 1000], 
+            "gamma": [0.001, 0.1],
+            "degree": [2, 5],
+            "kernel": ["linear", "poly", "rbf"]
+            }
+        
         self.primary_scoring = "accuracy"
         self.secondary_scoring = "f1"

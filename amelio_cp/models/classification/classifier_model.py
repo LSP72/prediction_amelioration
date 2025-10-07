@@ -21,12 +21,18 @@ class ClassifierModel:
         self.X_test_scaled = None
         self.y_test = None
         self.best_params = None  # stores the best parameters, and updates it everytime the addition of a sample allows better results
-
+        self.random_state = 42
+        self.search_spaces = None   # 'pbounds' in functions
+                                    # search_spaces = {
+                                    #     "C": [1, 1000], 
+                                    #     "gamma": [0.001, 0.1],
+                                    #     "degree": [2, 5], 
+                                    #     "kernel": ["linear", "poly", "rbf"]}
 
     # TODO: decide whether you need them or not
         # to be defined in child classes
-        self.primary_scoring = None
-        self.secondary_scoring = None
+        self.primary_scoring = 'accuracy_score'
+        self.secondary_scoring = 'f1'
         self.shap_analysis = None  # to store the shap analysis object if needed
 
     # TODO: collect feature keys    
@@ -43,7 +49,7 @@ class ClassifierModel:
         self.X_test_scaled = self.scaler.transform(self.X_test)
 
     def add_data(self, X, y, test_size): 
-        x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=72)        
+        x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=42, stratify=y)        
         print('✅ Split has been done.', flush=True)
         self.add_train_data(x_train, y_train)
         self.add_test_data(x_test, y_test)
@@ -122,7 +128,7 @@ class ClassifierModel:
             raise ValueError("❌ No data available for training.")
 
         # Define search space
-        pbounds = self.param_distributions
+        pbounds = self.search_spaces
 
         # Creating the optimisation loop
         if method == "random":
@@ -131,12 +137,12 @@ class ClassifierModel:
             print("Random search optimisation completed.")
 
         elif method == "bayesian":
-            search = OptimisationMethods.bayesian_search(self.model, n_iter, k_folds=5, primary_scoring=self.primary_scoring)
+            search = OptimisationMethods.bayesian_search(self.model, self.pbounds, n_iter, k_folds=5, primary_scoring=self.primary_scoring)
             search.fit(self.X_scaled, self.y)  # training
             print("Byesian Search optimisation completed.")
 
         elif method == "bayesian_optim":
-            search = OptimisationMethods.bayesian_optim(self.model, self.X_scaled, self.y)
+            search = OptimisationMethods.bayesian_optim(self.model, self.search_spaces, self.X_scaled, self.y, self.random_state)
             print("Bayesian optimisation completed.")
 
         else:
@@ -144,6 +150,7 @@ class ClassifierModel:
         
         self.model = search.best_estimator_  # recover the best model
         self.best_params = search.best_params_  # recover the best hp
+        print("Test set score: ", self.model.score(self.X_test_scaled, self.y_test))
         
         # Evaluate
         preds = self.model.predict(self.X_scaled)  # quick check to see if model OK (no overfitting)
@@ -153,7 +160,7 @@ class ClassifierModel:
 
         # Evaluate with K-Fold CV for stability
         # K-Fold CV setup
-        cv_splitter = KFold(n_splits=5, shuffle=True, random_state=72)
+        cv_splitter = KFold(n_splits=5, shuffle=True, random_state=42)
         cv_acc = cross_val_score(self.model, self.X_scaled, self.y, cv=cv_splitter, scoring="accuracy")
         print(f"📊 CV accuracy: {cv_acc.mean():.4f} ± {cv_acc.std():.4f}")
 
