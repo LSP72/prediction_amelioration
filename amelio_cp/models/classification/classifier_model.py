@@ -46,7 +46,7 @@ class ClassifierModel:
 
     # Function that splits and adds datasets
     def add_data(self, X, y, test_size): 
-        x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=72)        
+        x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=test_size, stratify=y, random_state=72)        
         print('✅ Split has been done.', flush=True)
         self.add_train_data(x_train, y_train)
         self.add_test_data(x_test, y_test)
