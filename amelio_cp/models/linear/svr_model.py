@@ -10,7 +10,7 @@ class SVRModel(LinearModel):
     def __init__(self):
         super().__init__()
 
-        self.pipeline = Pipeline([("scaler", StandardScaler()), ("svr", SVR())])
+        self.model = SVR()
 
         self.param_distributions = {
             "svr__C": uniform(1, 500),

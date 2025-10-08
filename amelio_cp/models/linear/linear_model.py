@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from amelio_cp import OptimisationMethodsLin
+from amelio_cp.optimisation.optimisation_methods_for_linear import OptimisationMethodsLin
 from sklearn.model_selection import RandomizedSearchCV, cross_val_score, KFold
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import r2_score, mean_squared_error
@@ -119,26 +119,22 @@ class LinearModel:
             print("Random search optimisation completed.")
 
         elif method == "bayesian":
-            search = OptimisationMethods.bayesian_search(self.model, n_iter, k_folds=5, primary_scoring=self.primary_scoring)
+            search = OptimisationMethodsLin.bayesian_search(self.model, n_iter, k_folds=5, primary_scoring=self.primary_scoring)
             search.fit(self.X_scaled, self.y)  # training
             print("Byesian Search optimisation completed.")
 
         elif method == "bayesian_optim":
-            search = OptimisationMethods.bayesian_optim(self.model, self.X_scaled, self.y)
+            search = OptimisationMethodsLin.bayesian_optim(self.model, self.X_scaled, self.y)
             print("Bayesian optimisation completed.")
 
         else:
             raise ValueError("❌ Unknown optimisation method. Choose 'random', 'bayesian' or 'bayesian_optim'.")
         
-
-        search.fit(self.X, self.y)  # training
-
         self.model = search.best_estimator_  # recover the best model
         self.best_params = search.best_params_  # recover the best hp
-        print("✅ Optimisation completed and model trained.")
-
+        
         # Evaluate
-        preds = self.model.predict(self.X)  # quick check to see if model OK (no overfitting)
+        preds = self.model.predict(self.X_scaled)  # quick check to see if model OK (no overfitting)
         r2 = r2_score(self.y, preds)  # IDEM
         mse = mean_squared_error(self.y, preds)  # IDEM
         print(f"Best Params: {self.best_params}")
@@ -146,10 +142,9 @@ class LinearModel:
 
         # Evaluate with K-Fold CV for stability
         # K-Fold CV setup
-        cv_splitter = KFold(n_splits=5, shuffle=True, random_state=72)
-        cv_r2 = cross_val_score(self.model, self.X, self.y, cv=cv_splitter, scoring="r2")
-        cv_rmse = np.sqrt(
-            -cross_val_score(self.model, self.X, self.y, cv=cv_splitter, scoring="neg_mean_squared_error")
+        cv_splitter = KFold(n_splits=5, shuffle=True, random_state=42)
+        cv_r2 = cross_val_score(self.model, self.X_scaled, self.y, cv=cv_splitter, scoring="r2")
+        cv_rmse = np.sqrt(-cross_val_score(self.model, self.X_scaled, self.y, cv=cv_splitter, scoring="neg_mean_squared_error")
         )
         print(f"📊 CV R²: {cv_r2.mean():.4f} ± {cv_r2.std():.4f}")
         print(f"📊 CV RMSE: {cv_rmse.mean():.4f} ± {cv_rmse.std():.4f}")

@@ -52,7 +52,6 @@ print("Best parameters found for speed SVC:", SVR_VIT.best_params, flush=True)
 # Predictions on the test set
 y_pred_VIT = SVR_VIT.model.predict(SVR_VIT.X_test_scaled)
 print("Test set score: ", SVR_VIT.model.score(SVR_VIT.X_test_scaled, SVR_VIT.y_test))
-print(classification_report(SVR_VIT.y_test, y_pred_VIT), flush=True)
 
 # Confusion matrix
 ClassifierMetrics.conf_matrix(SVR_VIT.y_test, y_pred_VIT, class_names=["Non-Responder", "Responder"], title="Confusion Matrix for speed classification")

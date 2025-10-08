@@ -77,7 +77,7 @@ class OptimisationMethodsLin:
         }
         kernel_options = ['linear', 'poly', 'rbf']
 
-        def svm_model(C, gamma, epsilon, degree, kernel):
+        def svr_model(C, gamma, epsilon, degree, kernel):
             params = {
                 "C": C,
                 "gamma": gamma,
@@ -86,13 +86,13 @@ class OptimisationMethodsLin:
                 "kernel": kernel_options[int(kernel)]
             }
             try_model = model.set_params(**params)
-            cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
-            scores = cross_val_score(try_model, X, y, cv=cv, scoring='accuracy')
+            cv = KFold(n_splits=5, shuffle=True, random_state=42)
+            scores = cross_val_score(try_model, X, y, cv=cv, scoring='neg_mean_squared_error')
             return scores.mean()
 
         print("⚙️ Starting Bayesian optimisation...")
 
-        optimizer = BayesianOptimization(f = svm_model, pbounds = pbounds, random_state=42, verbose=3)
+        optimizer = BayesianOptimization(f = svr_model, pbounds = pbounds, random_state=42, verbose=3)
         optimizer.maximize(init_points=10, n_iter=100) 
         best_params = optimizer.max['params']
         best_params['degree'] = int(best_params['degree'])  # Convert to int

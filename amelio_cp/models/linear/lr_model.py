@@ -14,10 +14,7 @@ class LRModel(LinearModel):
     def __init__(self): 
         super().__init__()
 
-        self.pipeline = Pipeline([
-            ("scaler", StandardScaler()),
-            ("lr", LinearRegression())
-        ])
+        self.model = LinearRegression()
 
     def train_and_tune(self, n_iter=100):
         """Tune hyperparameters"""
