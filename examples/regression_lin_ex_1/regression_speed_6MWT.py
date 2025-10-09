@@ -15,9 +15,7 @@ all_data = Process.load_csv(file_path)
 # %% Feature selection
 features = pd.read_excel('/Users/mathildetardif/Documents/Python/Biomarkers/prediction_amelioration/amelio_cp/processing/Features.xlsx')
 selected_features = features['19'].dropna().to_list()
-
-# TODO: faire une table Excel avec les features comme on les extrait et leurs 'vrais' noms
-
+features_names = features['19_names']
 
 # %% Dealing with the gait speed
 
@@ -51,9 +49,12 @@ print("Best parameters found for speed SVC:", SVR_VIT.best_params, flush=True)
 
 # Predictions on the test set
 y_pred_VIT = SVR_VIT.model.predict(SVR_VIT.X_test_scaled)
-print("Test set score: ", SVR_VIT.model.score(SVR_VIT.X_test_scaled, SVR_VIT.y_test))
+print("R² set score: ", SVR_VIT.model.score(SVR_VIT.X_test_scaled, SVR_VIT.y_test))
 
 # Confusion matrix
+delta_VIT = [1 if y_pred_VIT[i] - SVR_VIT.X_train['VIT_PRE'].iloc[i] > 0.1 else 0 for i in range(len(y_pred_VIT))]
+delta_VIT_true = [1 if SVR_VIT.y_test[i] - SVR_VIT.X_train['VIT_PRE'].iloc[i] > 0.1 else 0 for i in range(len(SVR_VIT.X_train))]
+
 ClassifierMetrics.conf_matrix(SVR_VIT.y_test, y_pred_VIT, class_names=["Non-Responder", "Responder"], title="Confusion Matrix for speed classification")
 
 # SHAP analysis
@@ -84,5 +85,5 @@ SHAPPlots.plot_shap_bar(SVR_VIT, selected_features)
 # SVC_6MWT.shap_analysis = SHAPPlots.shap_values_calculation(SVC_6MWT, 'svc', x_train_6MWT, x_test_6MWT)
 
 # # Shap plots
-# SHAPPlots.plot_shap_summary(SVC_6MWT, 'svc', selected_features, SVC_6MWT.X, x_test_6MWT)
+# SHAPPlots.plot_shap_summary(SVC_6MWT, 'svc', selected_features, SVC_6MWT.X_train, x_test_6MWT)
 # SHAPPlots.plot_shap_bar(SVC_6MWT, selected_features)
