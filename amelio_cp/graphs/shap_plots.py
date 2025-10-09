@@ -51,7 +51,7 @@ class SHAPPlots:
         
         # Saving the figure if a path is provided
         if output_path:
-            plt.savefig(f"{output_path}_{trained_model.random_state}.png", dpi=300, bbox_inches="tight")
+            plt.savefig(f"{output_path}shap_fig_{trained_model.random_state}.png", dpi=300, bbox_inches="tight")
             print(f"SHAP plot saved to: {output_path}")
 
         plt.show()
