@@ -17,29 +17,21 @@ class LRModel(LinearModel):
 
         self.model = LinearRegression()
 
-    def train_and_tune(self, n_iter=100):
+    def train(self, n_iter=100):
         """Tune hyperparameters"""
         if self.X_train is None or self.y_train is None:  # Check if there is some data
             raise ValueError("No data available for training.")
 
-        cv = KFold(n_splits=5, shuffle=True, random_state=self.random_state)
+        print(f"Starting training...")
+        self.model.fit(self.X_train, self.y_train)  # training
 
-        print(f"🔍 Starting hyperparameter search...")
-
-        model_pipeline = self.pipeline
-
-        model_pipeline.fit(self.X_train, self.y_train)  # training
-
-        # TODO: understanding how lr works
-        self.model = model_pipeline.best_estimator_  # recover the best model
-        self.best_params = model_pipeline.best_params_  # recover the best hp
-        print("✅ Optimisation completed and model trained.")
+        print("Model trained.")
 
         # Evaluate
         preds = self.model.predict(self.X_train)  # quick check to see if model OK (no overfitting)
         r2 = r2_score(self.y_train, preds)  # IDEM
         mse = mean_squared_error(self.y_train, preds)  # IDEM
-        print(f"Best Params: {self.best_params}")
+        print(f"Coeeficient: {self.model.coef_}")
         print(f"R²: {r2:.4f}, MSE: {mse:.4f}")
 
         # Evaluate with K-Fold CV for stability
