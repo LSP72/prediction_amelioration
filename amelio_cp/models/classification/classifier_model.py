@@ -10,25 +10,25 @@ import joblib
 # %% Base Model for classification
 class ClassifierModel:
     def __init__(self):
-        # TODO: variable and function names explicit at 1st read
-        self.name = None          # can name the model to call them then (i.e.SVRModel("Model A")), or can only initiate then such as model_A = SVRModel()
-        self.model = None  # will store the best model, should be updated each time
-        self.scaler = StandardScaler()
-        self.X_train = None # features of training dataset, start with nothing, but will be completed each time w/ a new sample
-        self.X_train_scaled = None  
-        self.y_train = None  # labels of training dataset, IDEM
-        self.X_test = None
-        self.X_test_scaled = None
-        self.y_test = None
-        self.best_params = None  # stores the best parameters, and updates it everytime the addition of a sample allows better results
-
+        
+        self.name = None                # can name the model to call them then (i.e.SVRModel("Model A")), or can only initiate then such as model_A = SVRModel()
+        self.model = None               # will store the best model, should be updated each time
+        self.scaler = StandardScaler()  # scaler used in data scaling
+        self.X_train = None             # features of training dataset, start with nothing, but will be completed each time w/ a new sample
+        self.X_train_scaled = None      # scaled features of training dataset
+        self.y_train = None             # labels of training dataset, IDEM
+        self.X_test = None              # features of testing dataset
+        self.X_test_scaled = None       # scaled features of testing dataset
+        self.y_test = None              # labels of testing dataset
+        self.best_params = None         # stores the best parameters, and updates it everytime the addition of a sample allows better results
+        self.shap_analysis = None       # stores the shap analysis objects, if needed
+        self.random_state = 42          # setting a default rdm state
 
     # TODO: decide whether you need them or not
         # to be defined in child classes
         self.primary_scoring = None
         self.secondary_scoring = None
-        self.shap_analysis = None  # to store the shap analysis object if needed
-
+        
     # TODO: collect feature keys    
     # TODO: checking if the test data are in the same order than train ones
 
