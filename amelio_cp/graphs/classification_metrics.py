@@ -6,11 +6,11 @@ class ClassifierMetrics():
         pass
 
     @staticmethod
-    def conf_matrix(y_true, y_pred, class_names:list, title:str):
+    def conf_matrix(y_true, y_pred, class_names:list, title:str, output_path: str, rdm_state):
         
         labels = class_names
         confusion_mat = confusion_matrix(y_true, y_pred)
-        print("Confusion Matrix:\n", confusion_mat)
+        print(f"Confusion Matrix for:\n", confusion_mat)
         disp = ConfusionMatrixDisplay(confusion_mat, display_labels=labels)
         fig, ax = plt.subplots(figsize=(8, 6))  # Adjust the size if necessary
         disp.plot(ax=ax)
@@ -27,4 +27,9 @@ class ClassifierMetrics():
             # Increase the font size of the color scale (colorbar)
         colorbar = disp.im_.colorbar
         colorbar.ax.tick_params(labelsize=16)  # Change 14 to your desired font size for color scale labels
+        
+        if output_path:
+            plt.savefig(f"{output_path.rstrip('.png')}_{rdm_state}.png", dpi=300, bbox_inches="tight")
+            print(f"Confusion matrix saved to: {output_path}")
+
         plt.show()
