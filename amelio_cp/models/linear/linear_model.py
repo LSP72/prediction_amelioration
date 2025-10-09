@@ -170,7 +170,19 @@ class LinearModel:
 
     def save(self, path):
         """Save model and training data."""
-        joblib.dump({"model": self.model, "X": self.X_train, "y": self.y_train, "best_params": self.best_params}, path)
+        joblib.dump({
+            "name": self.name,
+            "model": self.model,
+            "X_train": self.X_train,
+            "X_train_scaled": self.X_train_scaled,
+            "y_train": self.y_train,
+            "X_test": self.X_test, 
+            "X_test_scaled": self.X_test_scaled,
+            "y_test": self.y_test,
+            "best_params": self.best_params,
+            "shap_analysis": self.shap_analysis,
+            "primary_scoring": self.primary_scoring,
+            "secondary_scoring": self.secondary_scoring}, path)
         print(f"💾 Model saved to {path}")
 
     @classmethod
@@ -178,9 +190,17 @@ class LinearModel:
         """Load a saved model."""
         data = joblib.load(path)
         obj = cls()
+        obj.name = data["name"]
         obj.model = data["model"]
-        obj.X_train = data["X"]
-        obj.y_train = data["y"]
-        obj.best_params_ = data["best_params"]
+        obj.X_train = data["X_train"]
+        obj.X_train_scaled = data["X_train_scaled"]
+        obj.y_train = data["y_train"]
+        obj.X_test = data["X_test"]
+        obj.X_test_scaled = data["X_test_scaled"]
+        obj.y_test = data["y_test"]
+        obj.best_params = data["best_params"]
+        obj.shap_analysis = data["shap_analysis"]
+        obj.primary_scoring = data["primary_scoring"]
+        obj.secondary_scoring = data["secondary_scoring"]
         print(f"📂 Model loaded from {path}")
         return obj
