@@ -17,7 +17,7 @@ class SHAPPlots:
         except:
             raise ValueError("❌ Model is not fitted yet!")
 
-        explainer = shap.KernelExplainer(trained_model.model.predict, trained_model.X_scaled)    # bug potentiel
+        explainer = shap.KernelExplainer(trained_model.model.predict, trained_model.X_train_scaled)    # bug potentiel
         shap_values = explainer.shap_values(trained_model.X_test_scaled)
 
         return {'explainer': explainer,

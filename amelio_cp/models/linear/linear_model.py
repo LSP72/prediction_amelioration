@@ -12,16 +12,16 @@ import joblib
 # %% SVR
 class LinearModel:
     def __init__(self):
-        self.name = None          # can name the model to call them then (i.e.SVRModel("Model A")), or can only initiate then such as model_A = SVRModel()
-        self.model = None  # will store the best model, should be updated each time
-        self.scaler = StandardScaler()
-        self.X = None # features of training dataset, start with nothing, but will be completed each time w/ a new sample
-        self.X_scaled = None  
-        self.y = None  # labels of training dataset, IDEM
-        self.X_test = None
-        self.X_test_scaled = None
-        self.y_test = None
-        self.best_params = None  # stores the best parameters, and updates it everytime the addition of a sample allows better results
+        self.name = None                # can name the model to call them then (i.e.SVRModel("Model A")), or can only initiate then such as model_A = SVRModel()
+        self.model = None               # will store the best model, should be updated each time
+        self.scaler = StandardScaler()  # scaler used in data scaling
+        self.X_train = None             # features of training dataset, start with nothing, but will be completed each time w/ a new sample
+        self.X_train_scaled = None      # scaled features of training dataset
+        self.y_train = None             # labels of training dataset, IDEM
+        self.X_test = None              # features of testing dataset
+        self.X_test_scaled = None       # scaled features of testing dataset
+        self.y_test = None              # labels of testing dataset
+        self.best_params = None         # stores the best parameters, and updates it everytime the addition of a sample allows better results
 
         # to be defined in child classes
         self.primary_scoring = None
@@ -31,8 +31,8 @@ class LinearModel:
     # Specific function to add the training data
     def add_train_data(self, X, y):
         """Function that will add new samples to the training set."""
-        self.X, self.y = self._add_template(X, y, self.X, self.y)
-        self.X_scaled = self.scaler.fit_transform(self.X)
+        self.X_train, self.y_train = self._add_template(X, y, self.X_train, self.y_train)
+        self.X_train_scaled = self.scaler.fit_transform(self.X_train)
 
     # Specific function to add the testing data
     def add_test_data(self, X, y):
@@ -64,7 +64,7 @@ class LinearModel:
     def perf_estimate(self, n_iter):
         """Check for the overall perf of the model with nested CV method"""
 
-        if self.X is None or self.y is None:  # Check if there is some data
+        if self.X_train is None or self.y_train is None:  # Check if there is some data
             raise ValueError("No data available for training.")
 
         inner_cv = KFold(n_splits=5, shuffle=True, random_state=42)
@@ -96,8 +96,8 @@ class LinearModel:
             n_jobs=1,
         )
 
-        cv_r2 = cross_val_score(search, self.X, self.y, cv=outer_cv, scoring="r2")
-        cv_rmse = np.sqrt(-cross_val_score(search, self.X, self.y, cv=outer_cv, scoring="neg_mean_squared_error"))
+        cv_r2 = cross_val_score(search, self.X_train, self.y_train, cv=outer_cv, scoring="r2")
+        cv_rmse = np.sqrt(-cross_val_score(search, self.X_train, self.y_train, cv=outer_cv, scoring="neg_mean_squared_error"))
         print(f"📊 CV R²: {cv_r2.mean():.4f} ± {cv_r2.std():.4f}")
         print(f"📊 CV RMSE: {cv_rmse.mean():.4f} ± {cv_rmse.std():.4f}")
 
@@ -110,21 +110,21 @@ class LinearModel:
 
     def train_and_tune(self, method:str, n_iter=100):
         """Tune hyperparameters"""
-        if self.X is None or self.y is None:  # Check if there is some data
+        if self.X_train is None or self.y_train is None:  # Check if there is some data
             raise ValueError("No data available for training.")
 
         if method == "random":
             search = OptimisationMethodsLin.random_search(self.model, n_iter, k_folds=5, primary_scoring=self.primary_scoring)
-            search.fit(self.X_scaled, self.y)  # training
+            search.fit(self.X_train_scaled, self.y_train)  # training
             print("Random search optimisation completed.")
 
         elif method == "bayesian":
             search = OptimisationMethodsLin.bayesian_search(self.model, n_iter, k_folds=5, primary_scoring=self.primary_scoring)
-            search.fit(self.X_scaled, self.y)  # training
+            search.fit(self.X_train_scaled, self.y_train)  # training
             print("Byesian Search optimisation completed.")
 
         elif method == "bayesian_optim":
-            search = OptimisationMethodsLin.bayesian_optim(self.model, self.X_scaled, self.y)
+            search = OptimisationMethodsLin.bayesian_optim(self.model, self.X_train_scaled, self.y_train)
             print("Bayesian optimisation completed.")
 
         else:
@@ -134,17 +134,17 @@ class LinearModel:
         self.best_params = search.best_params_  # recover the best hp
         
         # Evaluate
-        preds = self.model.predict(self.X_scaled)  # quick check to see if model OK (no overfitting)
-        r2 = r2_score(self.y, preds)  # IDEM
-        mse = mean_squared_error(self.y, preds)  # IDEM
+        preds = self.model.predict(self.X_train_scaled)  # quick check to see if model OK (no overfitting)
+        r2 = r2_score(self.y_train, preds)  # IDEM
+        mse = mean_squared_error(self.y_train, preds)  # IDEM
         print(f"Best Params: {self.best_params}")
         print(f"R²: {r2:.4f}, MSE: {mse:.4f}")
 
         # Evaluate with K-Fold CV for stability
         # K-Fold CV setup
         cv_splitter = KFold(n_splits=5, shuffle=True, random_state=42)
-        cv_r2 = cross_val_score(self.model, self.X_scaled, self.y, cv=cv_splitter, scoring="r2")
-        cv_rmse = np.sqrt(-cross_val_score(self.model, self.X_scaled, self.y, cv=cv_splitter, scoring="neg_mean_squared_error")
+        cv_r2 = cross_val_score(self.model, self.X_train_scaled, self.y_train, cv=cv_splitter, scoring="r2")
+        cv_rmse = np.sqrt(-cross_val_score(self.model, self.X_train_scaled, self.y_train, cv=cv_splitter, scoring="neg_mean_squared_error")
         )
         print(f"📊 CV R²: {cv_r2.mean():.4f} ± {cv_r2.std():.4f}")
         print(f"📊 CV RMSE: {cv_rmse.mean():.4f} ± {cv_rmse.std():.4f}")
@@ -169,7 +169,7 @@ class LinearModel:
 
     def save(self, path):
         """Save model and training data."""
-        joblib.dump({"model": self.model, "X": self.X, "y": self.y, "best_params": self.best_params}, path)
+        joblib.dump({"model": self.model, "X": self.X_train, "y": self.y_train, "best_params": self.best_params}, path)
         print(f"💾 Model saved to {path}")
 
     @classmethod
@@ -178,8 +178,8 @@ class LinearModel:
         data = joblib.load(path)
         obj = cls()
         obj.model = data["model"]
-        obj.X = data["X"]
-        obj.y = data["y"]
+        obj.X_train = data["X"]
+        obj.y_train = data["y"]
         obj.best_params_ = data["best_params"]
         print(f"📂 Model loaded from {path}")
         return obj

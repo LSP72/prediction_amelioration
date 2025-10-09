@@ -14,9 +14,9 @@ class ClassifierModel:
         self.name = None          # can name the model to call them then (i.e.SVRModel("Model A")), or can only initiate then such as model_A = SVRModel()
         self.model = None  # will store the best model, should be updated each time
         self.scaler = StandardScaler()
-        self.X = None # features of training dataset, start with nothing, but will be completed each time w/ a new sample
-        self.X_scaled = None  
-        self.y = None  # labels of training dataset, IDEM
+        self.X_train = None # features of training dataset, start with nothing, but will be completed each time w/ a new sample
+        self.X_train_scaled = None  
+        self.y_train = None  # labels of training dataset, IDEM
         self.X_test = None
         self.X_test_scaled = None
         self.y_test = None
@@ -35,8 +35,8 @@ class ClassifierModel:
     # Specific function to add the training data
     def add_train_data(self, X, y):
         """Function that will add new samples to the training set."""
-        self.X, self.y = self._add_template(X, y, self.X, self.y)
-        self.X_scaled = self.scaler.fit_transform(self.X)
+        self.X_train, self.y_train = self._add_template(X, y, self.X_train, self.y_train)
+        self.X_train_scaled = self.scaler.fit_transform(self.X_train)
 
     # Specific function to add the testing data
     def add_test_data(self, X, y):
@@ -69,7 +69,7 @@ class ClassifierModel:
     def perf_estimate(self, n_iter):
         """Check for the overall perf of the model with nested CV method"""
 
-        if self.X is None or self.y is None:  # Check if there is some data
+        if self.X_train is None or self.y_train is None:  # Check if there is some data
             raise ValueError("No data available for training.")
         if self.pipeline is None or self.param_distributions is None:
             raise ValueError("Child class must define pipeline and param_distributions.")
@@ -97,7 +97,7 @@ class ClassifierModel:
             n_jobs=-1,
         )
 
-        cv_prim = cross_val_score(search, self.X, self.y, cv=outer_cv, scoring=self.primary_scoring)
+        cv_prim = cross_val_score(search, self.X_train, self.y_train, cv=outer_cv, scoring=self.primary_scoring)
         print(f"📊 CV {self.primary_scoring}: {cv_prim.mean():.4f} ± {cv_prim.std():.4f}")
 
         results = {
@@ -107,7 +107,7 @@ class ClassifierModel:
         }
 
         if self.secondary_scoring is not None:
-            cv_sec = cross_val_score(search, self.X, self.y, cv=outer_cv, scoring=self.secondary_scoring)
+            cv_sec = cross_val_score(search, self.X_train, self.y_train, cv=outer_cv, scoring=self.secondary_scoring)
             print(f"📊 CV {self.secondary_scoring}: {cv_sec.mean():.4f} ± {cv_sec.std():.4f}")
 
         results.update(
@@ -123,7 +123,7 @@ class ClassifierModel:
     # Function that optimises and trains the model
     def train_and_tune(self, method: str, n_iter=100):
         """Tune hyperparameters with choosen method and fit the model."""
-        if self.X is None or self.y is None:  # Check if there is some data
+        if self.X_train is None or self.y_train is None:  # Check if there is some data
             raise ValueError("❌ No data available for training.")
 
         # # Define search space
@@ -132,16 +132,16 @@ class ClassifierModel:
         # Creating the optimisation loop
         if method == "random":
             search = OptimisationMethods.random_search(self.model, n_iter, k_folds=5, primary_scoring=self.primary_scoring)
-            search.fit(self.X_scaled, self.y)  # training
+            search.fit(self.X_train_scaled, self.y_train)  # training
             print("Random search optimisation completed.")
 
         elif method == "bayesian":
             search = OptimisationMethods.bayesian_search(self.model, n_iter, k_folds=5, primary_scoring=self.primary_scoring)
-            search.fit(self.X_scaled, self.y)  # training
+            search.fit(self.X_train_scaled, self.y_train)  # training
             print("Byesian Search optimisation completed.")
 
         elif method == "bayesian_optim":
-            search = OptimisationMethods.bayesian_optim(self.model, self.X_scaled, self.y)
+            search = OptimisationMethods.bayesian_optim(self.model, self.X_train_scaled, self.y_train)
             print("Bayesian optimisation completed.")
 
         else:
@@ -151,15 +151,15 @@ class ClassifierModel:
         self.best_params = search.best_params_  # recover the best hp
         
         # Evaluate
-        preds = self.model.predict(self.X_scaled)  # quick check to see if model OK (no overfitting)
-        acc = accuracy_score(self.y, preds)  # IDEM
+        preds = self.model.predict(self.X_train_scaled)  # quick check to see if model OK (no overfitting)
+        acc = accuracy_score(self.y_train, preds)  # IDEM
         print(f"Best Params: {self.best_params}")
         print(f"Accuracy on training data: {acc:.4f}")
 
         # Evaluate with K-Fold CV for stability
         # K-Fold CV setup
         cv_splitter = KFold(n_splits=5, shuffle=True, random_state=72)
-        cv_acc = cross_val_score(self.model, self.X_scaled, self.y, cv=cv_splitter, scoring="accuracy")
+        cv_acc = cross_val_score(self.model, self.X_train_scaled, self.y_train, cv=cv_splitter, scoring="accuracy")
         print(f"📊 CV accuracy: {cv_acc.mean():.4f} ± {cv_acc.std():.4f}")
 
         return {
@@ -180,7 +180,7 @@ class ClassifierModel:
     # TODO: (Mathilde) rewrite to consider the new definiton of the class
     def save(self, path):
         """Save model and training data."""
-        joblib.dump({"model": self.model, "X": self.X, "y": self.y, "best_params": self.best_params}, path)
+        joblib.dump({"model": self.model, "X": self.X_train, "y": self.y_train, "best_params": self.best_params}, path)
         print(f"💾 Model saved to {path}")
 
     @classmethod
@@ -189,8 +189,8 @@ class ClassifierModel:
         data = joblib.load(path)
         obj = cls()
         obj.model = data["model"]
-        obj.X = data["X"]
-        obj.y = data["y"]
+        obj.X_train = data["X"]
+        obj.y_train = data["y"]
         obj.best_params_ = data["best_params"]
         print(f"📂 Model loaded from {path}")
         return obj

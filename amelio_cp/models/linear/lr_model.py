@@ -18,7 +18,7 @@ class LRModel(LinearModel):
 
     def train_and_tune(self, n_iter=100):
         """Tune hyperparameters"""
-        if self.X is None or self.y is None:        # Check if there is some data
+        if self.X_train is None or self.y_train is None:        # Check if there is some data
             raise ValueError("No data available for training.")
 
         cv=KFold(n_splits=5, shuffle=True, random_state=72)
@@ -27,7 +27,7 @@ class LRModel(LinearModel):
         
         model_pipeline = self.pipeline
     
-        model_pipeline.fit(self.X, self.y)      # training
+        model_pipeline.fit(self.X_train, self.y_train)      # training
 
         #TODO: understanding how lr works
         self.model = model_pipeline.best_estimator_         # recover the best model
@@ -35,17 +35,17 @@ class LRModel(LinearModel):
         print("✅ Optimisation completed and model trained.")
 
         # Evaluate
-        preds = self.model.predict(self.X)          # quick check to see if model OK (no overfitting)
-        r2 = r2_score(self.y, preds)                # IDEM
-        mse = mean_squared_error(self.y, preds)     # IDEM
+        preds = self.model.predict(self.X_train)          # quick check to see if model OK (no overfitting)
+        r2 = r2_score(self.y_train, preds)                # IDEM
+        mse = mean_squared_error(self.y_train, preds)     # IDEM
         print(f"Best Params: {self.best_params}")
         print(f"R²: {r2:.4f}, MSE: {mse:.4f}")
         
         # Evaluate with K-Fold CV for stability
         # K-Fold CV setup
         cv_splitter = KFold(n_splits=5, shuffle=True, random_state=72)
-        cv_r2 = cross_val_score(self.model, self.X, self.y, cv=cv_splitter, scoring="r2")
-        cv_rmse = np.sqrt(-cross_val_score(self.model, self.X, self.y, cv=cv_splitter, scoring="neg_mean_squared_error"))
+        cv_r2 = cross_val_score(self.model, self.X_train, self.y_train, cv=cv_splitter, scoring="r2")
+        cv_rmse = np.sqrt(-cross_val_score(self.model, self.X_train, self.y_train, cv=cv_splitter, scoring="neg_mean_squared_error"))
         print(f"📊 CV R²: {cv_r2.mean():.4f} ± {cv_r2.std():.4f}")
         print(f"📊 CV RMSE: {cv_rmse.mean():.4f} ± {cv_rmse.std():.4f}")
 
