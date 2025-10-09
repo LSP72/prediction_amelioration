@@ -46,7 +46,7 @@ class ClassifierModel:
 
     # Function that splits and adds datasets
     def add_data(self, X, y, test_size): 
-        x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=test_size, stratify=y, random_state=72)        
+        x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=test_size, stratify=y, random_state=self.random_state)        
         print('✅ Split has been done.', flush=True)
         self.add_train_data(x_train, y_train)
         self.add_test_data(x_test, y_test)
@@ -92,7 +92,7 @@ class ClassifierModel:
             n_iter=n_iter,
             scoring=self.primary_scoring,
             cv=inner_cv,
-            random_state=72,
+            random_state=self.random_state,
             verbose=2,
             n_jobs=-1,
         )
@@ -158,7 +158,7 @@ class ClassifierModel:
 
         # Evaluate with K-Fold CV for stability
         # K-Fold CV setup
-        cv_splitter = KFold(n_splits=5, shuffle=True, random_state=72)
+        cv_splitter = KFold(n_splits=5, shuffle=True, random_state= self.random_state)
         cv_acc = cross_val_score(self.model, self.X_train_scaled, self.y_train, cv=cv_splitter, scoring="accuracy")
         print(f"📊 CV accuracy: {cv_acc.mean():.4f} ± {cv_acc.std():.4f}")
 

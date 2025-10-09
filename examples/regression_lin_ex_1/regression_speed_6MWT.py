@@ -66,7 +66,7 @@ SHAPPlots.plot_shap_bar(SVR_VIT, selected_features)
 
 
 # %% Training the model for 6MWT classification
-# x_train_6MWT, x_test_6MWT, y_train_6MWT, y_test_6MWT = train_test_split(selected_data_6MWT, delta_6MWT, test_size=0.2, random_state=72)
+# x_train_6MWT, x_test_6MWT, y_train_6MWT, y_test_6MWT = train_test_split(selected_data_6MWT, delta_6MWT, test_size=0.2, random_state=42)
 
 # SVC_6MWT = SVCModel()
 # SVC_6MWT.add_data(x_train_6MWT, y_train_6MWT)

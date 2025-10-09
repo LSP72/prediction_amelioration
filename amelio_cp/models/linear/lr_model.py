@@ -21,7 +21,7 @@ class LRModel(LinearModel):
         if self.X_train is None or self.y_train is None:        # Check if there is some data
             raise ValueError("No data available for training.")
 
-        cv=KFold(n_splits=5, shuffle=True, random_state=72)
+        cv=KFold(n_splits=5, shuffle=True, random_state=self.random_state)
         
         print(f"🔍 Starting hyperparameter search...")
         
@@ -43,7 +43,7 @@ class LRModel(LinearModel):
         
         # Evaluate with K-Fold CV for stability
         # K-Fold CV setup
-        cv_splitter = KFold(n_splits=5, shuffle=True, random_state=72)
+        cv_splitter = KFold(n_splits=5, shuffle=True, random_state=self.random_state)
         cv_r2 = cross_val_score(self.model, self.X_train, self.y_train, cv=cv_splitter, scoring="r2")
         cv_rmse = np.sqrt(-cross_val_score(self.model, self.X_train, self.y_train, cv=cv_splitter, scoring="neg_mean_squared_error"))
         print(f"📊 CV R²: {cv_r2.mean():.4f} ± {cv_r2.std():.4f}")

@@ -23,7 +23,7 @@ class OptimisationMethodsLin:
         
         print("⚙️ Starting RandomizedSearchCV optimisation...")
 
-        cv_splitter = KFold(n_splits=k_folds, shuffle=True, random_state=72)
+        cv_splitter = KFold(n_splits=k_folds, shuffle=True, random_state=42)
 
         search = RandomizedSearchCV(
             model,
@@ -31,7 +31,7 @@ class OptimisationMethodsLin:
             n_iter=n_iter,
             scoring=primary_scoring,
             cv=cv_splitter,
-            random_state=72,
+            random_state=42,
             verbose=1,
             n_jobs=-1,
         )
@@ -50,7 +50,7 @@ class OptimisationMethodsLin:
             'kernel': Categorical(['linear', 'poly', 'rbf']),
         }
 
-        cv_splitter = KFold(n_splits=k_folds, shuffle=True, random_state=72)
+        cv_splitter = KFold(n_splits=k_folds, shuffle=True, random_state=42)
 
         search = BayesSearchCV(
             model,
@@ -58,7 +58,7 @@ class OptimisationMethodsLin:
             n_iter=n_iter,
             scoring=primary_scoring,
             cv=cv_splitter,
-            random_state=72,
+            random_state=42,
             n_jobs=-1,
             verbose=1
         )

@@ -22,12 +22,13 @@ class LinearModel:
         self.X_test_scaled = None       # scaled features of testing dataset
         self.y_test = None              # labels of testing dataset
         self.best_params = None         # stores the best parameters, and updates it everytime the addition of a sample allows better results
+        self.shap_analysis = None       # stores the shap analysis objects, if needed
+        self.random_state = 42          # setting a default rdm state
 
         # to be defined in child classes
         self.primary_scoring = None
         self.secondary_scoring = None
-        self.shap_analysis = None
-
+        
     # Specific function to add the training data
     def add_train_data(self, X, y):
         """Function that will add new samples to the training set."""
@@ -42,7 +43,7 @@ class LinearModel:
 
     # Function that splits and adds datasets
     def add_data(self, X, y, test_size): 
-        x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=72)        
+        x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=self.random_state)        
         print('✅ Split has been done.', flush=True)
         self.add_train_data(x_train, y_train)
         self.add_test_data(x_test, y_test)
@@ -91,7 +92,7 @@ class LinearModel:
             n_iter=n_iter,
             scoring="neg_mean_squared_error",  # will try to maximise r2
             cv=inner_cv,
-            random_state=72,
+            random_state=self.random_state,
             verbose=2,
             n_jobs=1,
         )
@@ -142,7 +143,7 @@ class LinearModel:
 
         # Evaluate with K-Fold CV for stability
         # K-Fold CV setup
-        cv_splitter = KFold(n_splits=5, shuffle=True, random_state=42)
+        cv_splitter = KFold(n_splits=5, shuffle=True, random_state=self.random_state)
         cv_r2 = cross_val_score(self.model, self.X_train_scaled, self.y_train, cv=cv_splitter, scoring="r2")
         cv_rmse = np.sqrt(-cross_val_score(self.model, self.X_train_scaled, self.y_train, cv=cv_splitter, scoring="neg_mean_squared_error")
         )
