@@ -10,7 +10,7 @@ class SVCModel(ClassifierModel):
     def __init__(self):
         super().__init__()
 
-        self.name = 'svc'
+        self.name = "svc"
         self.model = SVC()
         self.param_distributions = {
             "svc__C": uniform(1, 500),

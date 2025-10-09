@@ -139,6 +139,6 @@ class Process:
                     MCID_6MWT.append(1)
                 else:
                     MCID_6MWT.append(0)
-            return pd.Series(MCID_6MWT, index=all_data.index)  
+            return pd.Series(MCID_6MWT, index=all_data.index)
         else:
             raise ValueError("Variable not recognized. Use 'VIT', or '6MWT'.")

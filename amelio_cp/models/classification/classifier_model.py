@@ -10,26 +10,30 @@ import joblib
 # %% Base Model for classification
 class ClassifierModel:
     def __init__(self):
-        
-        self.name = None                # can name the model to call them then (i.e.SVRModel("Model A")), or can only initiate then such as model_A = SVRModel()
-        self.model = None               # will store the best model, should be updated each time
-        self.scaler = StandardScaler()  # scaler used in data scaling
-        self.X_train = None             # features of training dataset, start with nothing, but will be completed each time w/ a new sample
-        self.X_train_scaled = None      # scaled features of training dataset
-        self.y_train = None             # labels of training dataset, IDEM
-        self.X_test = None              # features of testing dataset
-        self.X_test_scaled = None       # scaled features of testing dataset
-        self.y_test = None              # labels of testing dataset
-        self.best_params = None         # stores the best parameters, and updates it everytime the addition of a sample allows better results
-        self.shap_analysis = None       # stores the shap analysis objects, if needed
-        self.random_state = 42          # setting a default rdm state
 
-    # TODO: decide whether you need them or not
+        self.name = None  # can name the model to call them then (i.e.SVRModel("Model A")), or can only initiate then such as model_A = SVRModel()
+        self.model = None  # will store the best model, should be updated each time
+        self.scaler = StandardScaler()  # scaler used in data scaling
+        self.X_train = (
+            None  # features of training dataset, start with nothing, but will be completed each time w/ a new sample
+        )
+        self.X_train_scaled = None  # scaled features of training dataset
+        self.y_train = None  # labels of training dataset, IDEM
+        self.X_test = None  # features of testing dataset
+        self.X_test_scaled = None  # scaled features of testing dataset
+        self.y_test = None  # labels of testing dataset
+        self.best_params = (
+            None  # stores the best parameters, and updates it everytime the addition of a sample allows better results
+        )
+        self.shap_analysis = None  # stores the shap analysis objects, if needed
+        self.random_state = 42  # setting a default rdm state
+
+        # TODO: decide whether you need them or not
         # to be defined in child classes
         self.primary_scoring = None
         self.secondary_scoring = None
-        
-    # TODO: collect feature keys    
+
+    # TODO: collect feature keys
     # TODO: checking if the test data are in the same order than train ones
 
     # Specific function to add the training data
@@ -45,9 +49,11 @@ class ClassifierModel:
         self.X_test_scaled = self.scaler.transform(self.X_test)
 
     # Function that splits and adds datasets
-    def add_data(self, X, y, test_size): 
-        x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=test_size, stratify=y, random_state=self.random_state)        
-        print('✅ Split has been done.', flush=True)
+    def add_data(self, X, y, test_size):
+        x_train, x_test, y_train, y_test = train_test_split(
+            X, y, test_size=test_size, stratify=y, random_state=self.random_state
+        )
+        print("✅ Split has been done.", flush=True)
         self.add_train_data(x_train, y_train)
         self.add_test_data(x_test, y_test)
 
@@ -131,12 +137,16 @@ class ClassifierModel:
 
         # Creating the optimisation loop
         if method == "random":
-            search = OptimisationMethods.random_search(self.model, n_iter, k_folds=5, primary_scoring=self.primary_scoring)
+            search = OptimisationMethods.random_search(
+                self.model, n_iter, k_folds=5, primary_scoring=self.primary_scoring
+            )
             search.fit(self.X_train_scaled, self.y_train)  # training
             print("Random search optimisation completed.")
 
         elif method == "bayesian":
-            search = OptimisationMethods.bayesian_search(self.model, n_iter, k_folds=5, primary_scoring=self.primary_scoring)
+            search = OptimisationMethods.bayesian_search(
+                self.model, n_iter, k_folds=5, primary_scoring=self.primary_scoring
+            )
             search.fit(self.X_train_scaled, self.y_train)  # training
             print("Byesian Search optimisation completed.")
 
@@ -146,10 +156,10 @@ class ClassifierModel:
 
         else:
             raise ValueError("❌ Unknown optimisation method. Choose 'random', 'bayesian' or 'bayesian_optim'.")
-        
+
         self.model = search.best_estimator_  # recover the best model
         self.best_params = search.best_params_  # recover the best hp
-        
+
         # Evaluate
         preds = self.model.predict(self.X_train_scaled)  # quick check to see if model OK (no overfitting)
         acc = accuracy_score(self.y_train, preds)  # IDEM
@@ -158,7 +168,7 @@ class ClassifierModel:
 
         # Evaluate with K-Fold CV for stability
         # K-Fold CV setup
-        cv_splitter = KFold(n_splits=5, shuffle=True, random_state= self.random_state)
+        cv_splitter = KFold(n_splits=5, shuffle=True, random_state=self.random_state)
         cv_acc = cross_val_score(self.model, self.X_train_scaled, self.y_train, cv=cv_splitter, scoring="accuracy")
         print(f"📊 CV accuracy: {cv_acc.mean():.4f} ± {cv_acc.std():.4f}")
 
@@ -176,22 +186,26 @@ class ClassifierModel:
         if self.model is None:
             raise ValueError("Model has not been optimised yet.")
         return self.model.fit(X, y)
-    
+
     def save(self, path):
         """Save model and training data."""
-        joblib.dump({
-            "name": self.name,
-            "model": self.model,
-            "X_train": self.X_train,
-            "X_train_scaled": self.X_train_scaled,
-            "y_train": self.y_train,
-            "X_test": self.X_test, 
-            "X_test_scaled": self.X_test_scaled,
-            "y_test": self.y_test,
-            "best_params": self.best_params,
-            "shap_analysis": self.shap_analysis,
-            "primary_scoring": self.primary_scoring,
-            "secondary_scoring": self.secondary_scoring}, path)
+        joblib.dump(
+            {
+                "name": self.name,
+                "model": self.model,
+                "X_train": self.X_train,
+                "X_train_scaled": self.X_train_scaled,
+                "y_train": self.y_train,
+                "X_test": self.X_test,
+                "X_test_scaled": self.X_test_scaled,
+                "y_test": self.y_test,
+                "best_params": self.best_params,
+                "shap_analysis": self.shap_analysis,
+                "primary_scoring": self.primary_scoring,
+                "secondary_scoring": self.secondary_scoring,
+            },
+            path,
+        )
         print(f"💾 Model saved to {path}")
 
     @classmethod

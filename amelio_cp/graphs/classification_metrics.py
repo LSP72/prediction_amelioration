@@ -1,13 +1,14 @@
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 import matplotlib.pyplot as plt
 
-class ClassifierMetrics():
+
+class ClassifierMetrics:
     def __init__(self):
         pass
 
     @staticmethod
-    def conf_matrix(y_true, y_pred, class_names:list, title:str, output_path: str, rdm_state):
-        
+    def conf_matrix(y_true, y_pred, class_names: list, title: str, output_path: str, rdm_state):
+
         labels = class_names
         confusion_mat = confusion_matrix(y_true, y_pred)
         print(f"Confusion Matrix for:\n", confusion_mat)
@@ -15,19 +16,19 @@ class ClassifierMetrics():
         fig, ax = plt.subplots(figsize=(8, 6))  # Adjust the size if necessary
         disp.plot(ax=ax)
         # Adjust font sizes for title, labels, and ticks
-        ax.set_xlabel('Predicted Labels', fontsize=16)
-        ax.set_ylabel('True Labels', fontsize=16)
+        ax.set_xlabel("Predicted Labels", fontsize=16)
+        ax.set_ylabel("True Labels", fontsize=16)
         ax.set_title(title, fontsize=16)
         # Change font size for tick labels
-        ax.tick_params(axis='both', labelsize=16)
-        plt.yticks(rotation = 90, va = 'center')
+        ax.tick_params(axis="both", labelsize=16)
+        plt.yticks(rotation=90, va="center")
         # Adjust the font size of the numbers inside the matrix squares
         for text in ax.texts:
             text.set_fontsize(20)  # Change this value to your desired font size
             # Increase the font size of the color scale (colorbar)
         colorbar = disp.im_.colorbar
         colorbar.ax.tick_params(labelsize=16)  # Change 14 to your desired font size for color scale labels
-        
+
         if output_path:
             plt.savefig(f"{output_path}confusion_matrix_{rdm_state}.png", dpi=300, bbox_inches="tight")
             print(f"Confusion matrix saved to: {output_path}")

@@ -12,15 +12,15 @@ class OptimisationMethodsLin:
 
     @staticmethod
     def random_search(model, n_iter, k_folds, primary_scoring):
-        
+
         pbounds = {
-            "C": uniform(1, 1000), 
+            "C": uniform(1, 1000),
             "gamma": uniform(0.001, 0.1),
             "epsilon": uniform(0.001, 1),
-            "degree": randint(2, 5), 
+            "degree": randint(2, 5),
             "kernel": ["linear", "poly", "rbf"],  # categorical options
         }
-        
+
         print("⚙️ Starting RandomizedSearchCV optimisation...")
 
         cv_splitter = KFold(n_splits=k_folds, shuffle=True, random_state=42)
@@ -41,13 +41,13 @@ class OptimisationMethodsLin:
     @staticmethod
     def bayesian_search(model, n_iter, k_folds, primary_scoring):
         print("⚙️ Starting Bayesian Search Optimization...")
-    
+
         pbounds = {
-            'C': Real(1, 1e+3, prior='log-uniform'),
-            'gamma': Real(1e-3, 1, prior='log-uniform'),
-            'epsilon': Real(1e-3, 1, prior='log-uniform'),
-            'degree': Integer(2,5),
-            'kernel': Categorical(['linear', 'poly', 'rbf']),
+            "C": Real(1, 1e3, prior="log-uniform"),
+            "gamma": Real(1e-3, 1, prior="log-uniform"),
+            "epsilon": Real(1e-3, 1, prior="log-uniform"),
+            "degree": Integer(2, 5),
+            "kernel": Categorical(["linear", "poly", "rbf"]),
         }
 
         cv_splitter = KFold(n_splits=k_folds, shuffle=True, random_state=42)
@@ -60,14 +60,14 @@ class OptimisationMethodsLin:
             cv=cv_splitter,
             random_state=42,
             n_jobs=-1,
-            verbose=1
+            verbose=1,
         )
-        
+
         return search
 
     @staticmethod
     def bayesian_optim(model, X, y):
-        
+
         pbounds = {
             "C": (1, 1000),
             "gamma": (0.001, 1),
@@ -75,7 +75,7 @@ class OptimisationMethodsLin:
             "degree": (2, 5),
             "kernel": (0, 2),  # 0: 'linear', 1: 'poly', 2: 'rbf'
         }
-        kernel_options = ['linear', 'poly', 'rbf']
+        kernel_options = ["linear", "poly", "rbf"]
 
         def svr_model(C, gamma, epsilon, degree, kernel):
             params = {
@@ -83,29 +83,29 @@ class OptimisationMethodsLin:
                 "gamma": gamma,
                 "epsilon": epsilon,
                 "degree": int(degree),
-                "kernel": kernel_options[int(kernel)]
+                "kernel": kernel_options[int(kernel)],
             }
             try_model = model.set_params(**params)
             cv = KFold(n_splits=5, shuffle=True, random_state=42)
-            scores = cross_val_score(try_model, X, y, cv=cv, scoring='neg_mean_squared_error')
+            scores = cross_val_score(try_model, X, y, cv=cv, scoring="neg_mean_squared_error")
             return scores.mean()
 
         print("⚙️ Starting Bayesian optimisation...")
 
-        optimizer = BayesianOptimization(f = svr_model, pbounds = pbounds, random_state=42, verbose=3)
-        optimizer.maximize(init_points=10, n_iter=100) 
-        best_params = optimizer.max['params']
-        best_params['degree'] = int(best_params['degree'])  # Convert to int
-        best_params['C'] = float(best_params['C'])  # Convert to float
-        best_params['kernel'] = kernel_options[int(best_params['kernel'])]  # Map back to string
+        optimizer = BayesianOptimization(f=svr_model, pbounds=pbounds, random_state=42, verbose=3)
+        optimizer.maximize(init_points=10, n_iter=100)
+        best_params = optimizer.max["params"]
+        best_params["degree"] = int(best_params["degree"])  # Convert to int
+        best_params["C"] = float(best_params["C"])  # Convert to float
+        best_params["kernel"] = kernel_options[int(best_params["kernel"])]  # Map back to string
 
         final_params = {
-            "C": float(best_params['C']),
-            "gamma": float(best_params['gamma']),
-            "degree": int(best_params['degree']),
-            "kernel": best_params['kernel']
+            "C": float(best_params["C"]),
+            "gamma": float(best_params["gamma"]),
+            "degree": int(best_params["degree"]),
+            "kernel": best_params["kernel"],
         }
-            
+
         best_model = model.set_params(**final_params)
         best_model.fit(X, y)
 
