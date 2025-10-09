@@ -27,7 +27,6 @@ print("Number of participants for speed predictions:", data_vit.shape[0])
 #%% Running classification with different random state
 # Classification
 for i in range(10):
-    rdm.seed(72)
     rdm_state = rdm.randint(0,100)
     print(rdm_state)
     SVC_vit = SVCModel()
