@@ -110,6 +110,7 @@ def main(model_name, seeds_list):
     
 if __name__ == "__main__":
     model_name_list =  ['svr', 'svc']
-    seeds_list = [20, 72, 45, 36, 8, 30, 98, 63, 6, 13]
+    # seeds_list = [20, 72, 45, 36, 8, 30, 98, 63, 6, 13]
+    seeds_list = [i for i in range(1,101)]
     for model_name in model_name_list:
         main(model_name, seeds_list)
