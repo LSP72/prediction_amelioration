@@ -28,6 +28,7 @@ class LinearModel:
         )
         self.shap_analysis = None  # stores the shap analysis objects, if needed
         self.random_state = 42  # setting a default rdm state
+        self.optim_method = None
 
         # to be defined in child classes
         self.primary_scoring = None
@@ -141,6 +142,7 @@ class LinearModel:
         else:
             raise ValueError("❌ Unknown optimisation method. Choose 'random', 'bayesian' or 'bayesian_optim'.")
 
+        self.optim_method = method
         self.model = search.best_estimator_  # recover the best model
         self.best_params = search.best_params_  # recover the best hp
 
@@ -165,6 +167,7 @@ class LinearModel:
 
         return {"R²": r2, "MSE": mse, "CV R²": cv_r2.mean(), "CV RMSE": cv_rmse.mean()}
 
+# TODO: have a look if you need that function
     def fit(self, X, y):
         """
         Train the model with the (X, y) dataset
@@ -175,11 +178,6 @@ class LinearModel:
             raise ValueError("Model has not been optimised yet.")
         return self.model.fit(X, y)
 
-    def predict(self, X):
-        """Make predictions with the trained model."""
-        if self.model is None:
-            raise ValueError("Model has not been trained yet.")
-        return self.model.predict(X)
 
     def save(self, path):
         """Save model and training data."""

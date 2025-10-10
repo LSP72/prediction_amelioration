@@ -10,6 +10,7 @@ class SVRModel(LinearModel):
     def __init__(self):
         super().__init__()
 
+        self.name = 'svr'
         self.model = SVR()
 
         self.param_distributions = {

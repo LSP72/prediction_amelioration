@@ -1,9 +1,7 @@
 import pandas as pd
 from amelio_cp import Process
 from amelio_cp import SVRModel
-from sklearn.metrics import classification_report
 from amelio_cp import ClassifierMetrics
-from amelio_cp import SHAPPlots
 
 # %% Collecting/Loading the data from a csv file already created
 

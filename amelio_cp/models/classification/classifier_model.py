@@ -27,6 +27,7 @@ class ClassifierModel:
         )
         self.shap_analysis = None  # stores the shap analysis objects, if needed
         self.random_state = 42  # setting a default rdm state
+        self.optim_method = None
 
         # TODO: decide whether you need them or not
         # to be defined in child classes

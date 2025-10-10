@@ -7,7 +7,7 @@ class ClassifierMetrics:
         pass
 
     @staticmethod
-    def conf_matrix(y_true, y_pred, class_names: list, title: str, output_path: str, rdm_state):
+    def conf_matrix(model, y_true, y_pred, class_names: list, title: str, output_path: str):
 
         labels = class_names
         confusion_mat = confusion_matrix(y_true, y_pred)
@@ -30,7 +30,7 @@ class ClassifierMetrics:
         colorbar.ax.tick_params(labelsize=16)  # Change 14 to your desired font size for color scale labels
 
         if output_path:
-            plt.savefig(f"{output_path}confusion_matrix_{rdm_state}.png", dpi=300, bbox_inches="tight")
+            plt.savefig(f"{output_path}confusion_matrix_{model.name}_{model.random_state}.svg", dpi=300, bbox_inches="tight")
             print(f"Confusion matrix saved to: {output_path}")
 
         plt.show()

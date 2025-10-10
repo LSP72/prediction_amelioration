@@ -24,7 +24,7 @@ class SHAPPlots:
         return {"explainer": explainer, "shap_values": shap_values}
 
     @staticmethod
-    def plot_shap_summary(trained_model, features_names: list, output_path: str):
+    def plot_shap_summary(trained_model, features_names: list, output_path: str, show=True):
 
         shap_values = trained_model.shap_analysis["shap_values"]
 
@@ -54,10 +54,11 @@ class SHAPPlots:
 
         # Saving the figure if a path is provided
         if output_path:
-            plt.savefig(f"{output_path}shap_fig_{trained_model.random_state}.png", dpi=300, bbox_inches="tight")
+            plt.savefig(f"{output_path}shap_fig_{trained_model.random_state}.svg", dpi=300, bbox_inches="tight")
             print(f"SHAP plot saved to: {output_path}")
 
-        plt.show()
+        if show:
+            plt.show()
 
     @staticmethod
     def plot_shap_bar(trained_model, features_names: list):
