@@ -70,7 +70,7 @@ def save_data(results_dict, model_name, output_path):
         pkl.dump(results_dict, file)
 
 
-def main(model_name, seeds_list):
+def main(model_name, seeds_list, condition_to_predict):
     results_dict = {}
     data_path = "datasets/sample_2/all_data_28pp.csv"
     features_path = "amelio_cp/processing/Features.xlsx"
@@ -81,7 +81,7 @@ def main(model_name, seeds_list):
         starting_time = time.time()
 
         model = build_model(model_name, seed)
-        X, y, features_names = prepare_data(data_path, features_path, 'VIT', model_name)
+        X, y, features_names = prepare_data(data_path, features_path, condition_to_predict, model_name)
         load_data(X, y, model)
 
         model.train_and_tune("bayesian_optim")
@@ -101,8 +101,8 @@ def main(model_name, seeds_list):
             r2 = None
             precision_score = accuracy_score(model.y_test, y_pred)
 
-            model.shap_analysis = SHAPPlots.shap_values_calculation(model)
-            SHAPPlots.plot_shap_summary(model, features_names, output_path_shap, show=False)
+            # model.shap_analysis = SHAPPlots.shap_values_calculation(model)
+            # SHAPPlots.plot_shap_summary(model, features_names, output_path_shap, show=False)
 
         results_dict = append_data(results_dict, model, i, optim_time, precision_score, conf_matrix, r2)
 
@@ -110,7 +110,10 @@ def main(model_name, seeds_list):
     
 if __name__ == "__main__":
     model_name_list =  ['svr', 'svc']
+    # seeds_list = [20]
     # seeds_list = [20, 72, 45, 36, 8, 30, 98, 63, 6, 13]
     seeds_list = [i for i in range(1,101)]
+    print("************************************")
+    print(f"Running with the seed: {i}")
     for model_name in model_name_list:
-        main(model_name, seeds_list)
+        main(model_name, seeds_list, '6MWT')
