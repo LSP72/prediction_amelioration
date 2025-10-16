@@ -11,7 +11,7 @@ class OptimisationMethodsLin:
         pass
 
     @staticmethod
-    def random_search(model, n_iter, k_folds, primary_scoring):
+    def random_search(model, n_iter, k_folds):
 
         pbounds = {
             "C": uniform(1, 1000),
@@ -29,7 +29,7 @@ class OptimisationMethodsLin:
             model,
             param_distributions=pbounds,
             n_iter=n_iter,
-            scoring=primary_scoring,
+            scoring="neg_mean_squared_error",
             cv=cv_splitter,
             random_state=42,
             verbose=1,
@@ -56,7 +56,7 @@ class OptimisationMethodsLin:
             model,
             search_spaces=pbounds,
             n_iter=n_iter,
-            scoring=primary_scoring,
+            scoring="neg_mean_squared_error",
             cv=cv_splitter,
             random_state=42,
             n_jobs=-1,

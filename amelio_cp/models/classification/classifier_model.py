@@ -29,12 +29,6 @@ class ClassifierModel:
         self.random_state = 42  # setting a default rdm state
         self.optim_method = None
 
-        # TODO: decide whether you need them or not
-        # to be defined in child classes
-        self.primary_scoring = None
-        self.secondary_scoring = None
-
-    # TODO: collect feature keys
     # TODO: checking if the test data are in the same order than train ones
 
     # Specific function to add the training data
@@ -97,7 +91,7 @@ class ClassifierModel:
             pipeline,
             param_distributions=pbounds,
             n_iter=n_iter,
-            scoring=self.primary_scoring,
+            scoring=self.primary_scoring, # doesnt exist anymore, but function kept
             cv=inner_cv,
             random_state=self.random_state,
             verbose=2,
@@ -108,9 +102,9 @@ class ClassifierModel:
         print(f"📊 CV {self.primary_scoring}: {cv_prim.mean():.4f} ± {cv_prim.std():.4f}")
 
         results = {
-            "CV {self.primary_scoring} scores": cv_prim.tolist(),
-            "CV {self.primary_scoring} mean": float(cv_prim.mean()),
-            "CV {self.primary_scoring} std": float(cv_prim.std()),
+            "CV {self.primary_scoring} scores": cv_prim.tolist(),       # doesnt exist anymore, but function kept
+            "CV {self.primary_scoring} mean": float(cv_prim.mean()),    # doesnt exist anymore, but function kept
+            "CV {self.primary_scoring} std": float(cv_prim.std()),      # doesnt exist anymore, but function kept
         }
 
         if self.secondary_scoring is not None:
@@ -133,6 +127,7 @@ class ClassifierModel:
         if self.X_train is None or self.y_train is None:  # Check if there is some data
             raise ValueError("❌ No data available for training.")
 
+        # TODO: create functions to adjust pbounds for each optimisation model
         # # Define search space
         # pbounds = self.param_distributions
 
@@ -178,6 +173,7 @@ class ClassifierModel:
             "CV accuracy": cv_acc.mean(),
         }
 
+    # TODO: check if well defined in other functions, i.e. model.model.fit()
     def fit(self, X, y):
         """
         Train the model with the (X, y) dataset
@@ -202,8 +198,6 @@ class ClassifierModel:
                 "y_test": self.y_test,
                 "best_params": self.best_params,
                 "shap_analysis": self.shap_analysis,
-                "primary_scoring": self.primary_scoring,
-                "secondary_scoring": self.secondary_scoring,
             },
             path,
         )
@@ -224,7 +218,5 @@ class ClassifierModel:
         obj.y_test = data["y_test"]
         obj.best_params = data["best_params"]
         obj.shap_analysis = data["shap_analysis"]
-        obj.primary_scoring = data["primary_scoring"]
-        obj.secondary_scoring = data["secondary_scoring"]
         print(f"📂 Model loaded from {path}")
         return obj

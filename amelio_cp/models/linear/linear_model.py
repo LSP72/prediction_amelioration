@@ -30,10 +30,6 @@ class LinearModel:
         self.random_state = 42  # setting a default rdm state
         self.optim_method = None
 
-        # to be defined in child classes
-        self.primary_scoring = None
-        self.secondary_scoring = None
-
     # Specific function to add the training data
     def add_train_data(self, X, y):
         """Function that will add new samples to the training set."""
@@ -192,8 +188,6 @@ class LinearModel:
                 "y_test": self.y_test,
                 "best_params": self.best_params,
                 "shap_analysis": self.shap_analysis,
-                "primary_scoring": self.primary_scoring,
-                "secondary_scoring": self.secondary_scoring,
             },
             path,
         )
@@ -214,7 +208,5 @@ class LinearModel:
         obj.y_test = data["y_test"]
         obj.best_params = data["best_params"]
         obj.shap_analysis = data["shap_analysis"]
-        obj.primary_scoring = data["primary_scoring"]
-        obj.secondary_scoring = data["secondary_scoring"]
         print(f"📂 Model loaded from {path}")
         return obj

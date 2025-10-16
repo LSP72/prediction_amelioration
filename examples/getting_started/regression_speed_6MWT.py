@@ -2,6 +2,9 @@ import pandas as pd
 from amelio_cp import Process
 from amelio_cp import SVRModel
 from amelio_cp import ClassifierMetrics
+from amelio_cp import SHAPPlots
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import classification_report
 
 # %% Collecting/Loading the data from a csv file already created
 
@@ -31,16 +34,16 @@ selected_data_VIT = all_data_VIT[selected_features]
 print("Number of participants for VIT classification:", all_data_VIT.shape[0])
 print(selected_data_VIT.columns)
 
-# #%% Extracting data about 6MWT
-# all_data_6MWT = all_data.drop(['VIT_POST'], axis=1)
-# all_data_6MWT = all_data_6MWT.dropna()
-# delta_6MWT = Process.calculate_MCID(all_data_6MWT, "6MWT")
+#%% Extracting data about 6MWT
+all_data_6MWT = all_data.drop(['VIT_POST'], axis=1)
+all_data_6MWT = all_data_6MWT.dropna()
+delta_6MWT = Process.calculate_MCID(all_data_6MWT, "6MWT")
 
-# data_6MWT = all_data_6MWT.drop(["6MWT_POST"], axis=1)
-# selected_data_6MWT = data_6MWT[selected_features]
+data_6MWT = all_data_6MWT.drop(["6MWT_POST"], axis=1)
+selected_data_6MWT = data_6MWT[selected_features]
 
-# print("Number of participants for 6MWT classification:", data_6MWT.shape[0])
-# print(selected_data_6MWT.columns)
+print("Number of participants for 6MWT classification:", data_6MWT.shape[0])
+print(selected_data_6MWT.columns)
 
 # %% Training the model for vitesse classification
 
@@ -75,24 +78,30 @@ SHAPPlots.plot_shap_bar(SVR_VIT, selected_features)
 
 
 # %% Training the model for 6MWT classification
-# x_train_6MWT, x_test_6MWT, y_train_6MWT, y_test_6MWT = train_test_split(selected_data_6MWT, delta_6MWT, test_size=0.2, random_state=42)
+x_train_6MWT, x_test_6MWT, y_train_6MWT, y_test_6MWT = train_test_split(selected_data_6MWT, delta_6MWT, test_size=0.2, random_state=42)
 
-# SVC_6MWT = SVCModel()
-# SVC_6MWT.add_data(x_train_6MWT, y_train_6MWT)
-# SVC_6MWT.train_and_tune("bayesian_optim", n_iter=100)
+SVR_6MWT = SVRModel()
+SVR_6MWT.add_data(x_train_6MWT, y_train_6MWT)
+SVR_6MWT.train_and_tune("bayesian_optim", n_iter=100)
 
-# print("Best parameters found for speed SVC:", SVC_6MWT.best_params)
+print("Best parameters found for speed SVR:", SVR_6MWT.best_params)
 
-# # Predictions on the test set
-# y_pred_6MWT = SVC_6MWT.predict(x_test_6MWT)
-# print(classification_report(y_test_6MWT, y_pred_6MWT))
+# Predictions on the test set
+y_pred_6MWT = SVR_6MWT.model.predict(SVR_6MWT.X_test_scaled)
+print("R² set score: ", SVR_6MWT.model.score(SVR_6MWT.X_test_scaled, SVR_6MWT.y_test))
 
-# # Confusion matrix
-# ClassifierMetrics.conf_matrix(y_test_6MWT, y_pred_6MWT, class_names=["Non-rResponder", "Responder"], title="Confusion Matrix for 6MWT classification")
+# Confusion matrix
+delta_6MWT = [1 if y_pred_6MWT[i] - SVR_6MWT.X_train["6MWT_PRE"].iloc[i] > 0.1 else 0 for i in range(len(y_pred_VIT))]
+delta_6MWT_true = [
+    1 if SVR_6MWT.y_test[i] - SVR_VIT.X_train["6MWT_PRE"].iloc[i] > 0.1 else 0 for i in range(len(SVR_6MWT.X_train))
+]
 
-# # SHAP analysis
-# SVC_6MWT.shap_analysis = SHAPPlots.shap_values_calculation(SVC_6MWT, 'svc', x_train_6MWT, x_test_6MWT)
+ClassifierMetrics.conf_matrix(
+    SVR_6MWT.y_test,
+    y_pred_6MWT,
+    class_names=["Non-Responder", "Responder"],
+    title="Confusion Matrix for speed classification",
+)
 
-# # Shap plots
-# SHAPPlots.plot_shap_summary(SVC_6MWT, 'svc', selected_features, SVC_6MWT.X_train, x_test_6MWT)
-# SHAPPlots.plot_shap_bar(SVC_6MWT, selected_features)
+# SHAP analysis
+SVR_6MWT.shap_analysis = SHAPPlots.shap_values_calculation(SVR_6MWT, 'svr', x_train_6MWT, x_test_6MWT)

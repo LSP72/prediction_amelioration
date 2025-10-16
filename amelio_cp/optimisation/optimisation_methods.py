@@ -5,13 +5,13 @@ from sklearn.svm import SVC
 from skopt.space import Real, Integer, Categorical
 from scipy.stats import uniform, randint
 
-
+#TODO: find a way to collect training accuracies
 class OptimisationMethods:
     def __init__(self):
         pass
 
     @staticmethod
-    def random_search(model, n_iter, k_folds, primary_scoring):
+    def random_search(model, n_iter, k_folds):
 
         pbounds = {
             "C": uniform(1, 1000),
@@ -28,7 +28,7 @@ class OptimisationMethods:
             model,
             param_distributions=pbounds,
             n_iter=n_iter,
-            scoring=primary_scoring,
+            scoring="accuracy",
             cv=cv_splitter,
             random_state=42,
             verbose=1,
@@ -38,7 +38,7 @@ class OptimisationMethods:
         return search
 
     @staticmethod
-    def bayesian_search(model, n_iter, k_folds, primary_scoring):
+    def bayesian_search(model, n_iter, k_folds):
         print("⚙️ Starting Bayesian Search Optimization...")
 
         pbounds = {
@@ -54,7 +54,7 @@ class OptimisationMethods:
             model,
             search_spaces=pbounds,
             n_iter=n_iter,
-            scoring=primary_scoring,
+            scoring="accuracy",
             cv=cv_splitter,
             random_state=42,
             n_jobs=-1,
