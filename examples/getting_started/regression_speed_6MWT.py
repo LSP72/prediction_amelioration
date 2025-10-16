@@ -6,19 +6,23 @@ from amelio_cp import ClassifierMetrics
 # %% Collecting/Loading the data from a csv file already created
 
 # TODO: relative path to fix
-file_path = "/Users/mathildetardif/Documents/Python/Biomarkers/prediction_amelioration/datasets/sample_2/all_data_28pp.csv"
+file_path = (
+    "/Users/mathildetardif/Documents/Python/Biomarkers/prediction_amelioration/datasets/sample_2/all_data_28pp.csv"
+)
 
 all_data = Process.load_csv(file_path)
 
 # %% Feature selection
-features = pd.read_excel('/Users/mathildetardif/Documents/Python/Biomarkers/prediction_amelioration/amelio_cp/processing/Features.xlsx')
-selected_features = features['19'].dropna().to_list()
-features_names = features['19_names']
+features = pd.read_excel(
+    "/Users/mathildetardif/Documents/Python/Biomarkers/prediction_amelioration/amelio_cp/processing/Features.xlsx"
+)
+selected_features = features["19"].dropna().to_list()
+features_names = features["19_names"]
 
 # %% Dealing with the gait speed
 
 # TODO: fonction to do in the Process file
-all_data_VIT = all_data.drop(['6MWT_POST'], axis=1)
+all_data_VIT = all_data.drop(["6MWT_POST"], axis=1)
 all_data_VIT = all_data_VIT.dropna()
 
 VIT_POST = all_data_VIT["VIT_POST"]
@@ -50,10 +54,17 @@ y_pred_VIT = SVR_VIT.model.predict(SVR_VIT.X_test_scaled)
 print("R² set score: ", SVR_VIT.model.score(SVR_VIT.X_test_scaled, SVR_VIT.y_test))
 
 # Confusion matrix
-delta_VIT = [1 if y_pred_VIT[i] - SVR_VIT.X_train['VIT_PRE'].iloc[i] > 0.1 else 0 for i in range(len(y_pred_VIT))]
-delta_VIT_true = [1 if SVR_VIT.y_test[i] - SVR_VIT.X_train['VIT_PRE'].iloc[i] > 0.1 else 0 for i in range(len(SVR_VIT.X_train))]
+delta_VIT = [1 if y_pred_VIT[i] - SVR_VIT.X_train["VIT_PRE"].iloc[i] > 0.1 else 0 for i in range(len(y_pred_VIT))]
+delta_VIT_true = [
+    1 if SVR_VIT.y_test[i] - SVR_VIT.X_train["VIT_PRE"].iloc[i] > 0.1 else 0 for i in range(len(SVR_VIT.X_train))
+]
 
-ClassifierMetrics.conf_matrix(SVR_VIT.y_test, y_pred_VIT, class_names=["Non-Responder", "Responder"], title="Confusion Matrix for speed classification")
+ClassifierMetrics.conf_matrix(
+    SVR_VIT.y_test,
+    y_pred_VIT,
+    class_names=["Non-Responder", "Responder"],
+    title="Confusion Matrix for speed classification",
+)
 
 # SHAP analysis
 SVR_VIT.shap_analysis = SHAPPlots.shap_values_calculation(SVR_VIT)

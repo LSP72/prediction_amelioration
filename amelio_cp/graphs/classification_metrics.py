@@ -30,7 +30,9 @@ class ClassifierMetrics:
         colorbar.ax.tick_params(labelsize=16)  # Change 14 to your desired font size for color scale labels
 
         if output_path:
-            plt.savefig(f"{output_path}confusion_matrix_{model.name}_{model.random_state}.svg", dpi=300, bbox_inches="tight")
+            plt.savefig(
+                f"{output_path}confusion_matrix_{model.name}_{model.random_state}.svg", dpi=300, bbox_inches="tight"
+            )
             print(f"Confusion matrix saved to: {output_path}")
 
         plt.show()
