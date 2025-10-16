@@ -7,7 +7,7 @@ class ClassifierMetrics:
         pass
 
     @staticmethod
-    def conf_matrix(model, y_true, y_pred, class_names: list, title: str, output_path: str):
+    def conf_matrix(model, y_true, y_pred, class_names: list, title: str, output_path=None):
 
         labels = class_names
         confusion_mat = confusion_matrix(y_true, y_pred)
