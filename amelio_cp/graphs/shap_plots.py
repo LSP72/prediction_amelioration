@@ -3,9 +3,6 @@ from pandas import DataFrame
 import matplotlib.pyplot as plt
 from sklearn.utils.validation import check_is_fitted
 
-# KEY = ['vitesse', ']
-
-
 class SHAPPlots:
     def __init__(self):
         pass
