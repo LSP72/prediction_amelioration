@@ -23,8 +23,13 @@ svr_acc_sorted = np.array(svr_acc)[idx]
 x = np.linspace(0, len(seeds), len(seeds), endpoint=False)
 plt.scatter(x, svc_acc_sorted, label='svc', color='r')
 plt.scatter(x, svr_acc_sorted, label='svr', color='b')
+for i in range(len(x)):
+    plt.plot([x[i], x[i]], [svc_acc_sorted[i], svr_acc_sorted[i]], color='gray', linestyle='-', alpha=0.6) # line
+    diff = svc_acc_sorted[i] - svr_acc_sorted[i]
+    y_mid = (svc_acc_sorted[i] + svr_acc_sorted[i]) / 2
+    plt.text(x[i] + 0.1, y_mid, f"{diff:.2f}", fontsize=7, color='gray')
 plt.xlabel("Seeds")
-plt.xticks(x, seeds_sorted)
+plt.xticks(x, seeds_sorted, rotation=90)
 plt.ylabel('Precision scores (%)')
 plt.title('Precision scores vs. seeds \n Speed predictions')
 plt.legend()
