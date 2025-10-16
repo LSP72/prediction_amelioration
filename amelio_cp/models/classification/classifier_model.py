@@ -91,7 +91,7 @@ class ClassifierModel:
             pipeline,
             param_distributions=pbounds,
             n_iter=n_iter,
-            scoring=self.primary_scoring, # doesnt exist anymore, but function kept
+            scoring=self.primary_scoring,  # doesnt exist anymore, but function kept
             cv=inner_cv,
             random_state=self.random_state,
             verbose=2,
@@ -102,9 +102,9 @@ class ClassifierModel:
         print(f"📊 CV {self.primary_scoring}: {cv_prim.mean():.4f} ± {cv_prim.std():.4f}")
 
         results = {
-            "CV {self.primary_scoring} scores": cv_prim.tolist(),       # doesnt exist anymore, but function kept
-            "CV {self.primary_scoring} mean": float(cv_prim.mean()),    # doesnt exist anymore, but function kept
-            "CV {self.primary_scoring} std": float(cv_prim.std()),      # doesnt exist anymore, but function kept
+            "CV {self.primary_scoring} scores": cv_prim.tolist(),  # doesnt exist anymore, but function kept
+            "CV {self.primary_scoring} mean": float(cv_prim.mean()),  # doesnt exist anymore, but function kept
+            "CV {self.primary_scoring} std": float(cv_prim.std()),  # doesnt exist anymore, but function kept
         }
 
         if self.secondary_scoring is not None:

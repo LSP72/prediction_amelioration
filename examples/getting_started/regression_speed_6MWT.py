@@ -34,8 +34,8 @@ selected_data_VIT = all_data_VIT[selected_features]
 print("Number of participants for VIT classification:", all_data_VIT.shape[0])
 print(selected_data_VIT.columns)
 
-#%% Extracting data about 6MWT
-all_data_6MWT = all_data.drop(['VIT_POST'], axis=1)
+# %% Extracting data about 6MWT
+all_data_6MWT = all_data.drop(["VIT_POST"], axis=1)
 all_data_6MWT = all_data_6MWT.dropna()
 delta_6MWT = Process.calculate_MCID(all_data_6MWT, "6MWT")
 
@@ -78,7 +78,9 @@ SHAPPlots.plot_shap_bar(SVR_VIT, selected_features)
 
 
 # %% Training the model for 6MWT classification
-x_train_6MWT, x_test_6MWT, y_train_6MWT, y_test_6MWT = train_test_split(selected_data_6MWT, delta_6MWT, test_size=0.2, random_state=42)
+x_train_6MWT, x_test_6MWT, y_train_6MWT, y_test_6MWT = train_test_split(
+    selected_data_6MWT, delta_6MWT, test_size=0.2, random_state=42
+)
 
 SVR_6MWT = SVRModel()
 SVR_6MWT.add_data(x_train_6MWT, y_train_6MWT)
@@ -104,4 +106,4 @@ ClassifierMetrics.conf_matrix(
 )
 
 # SHAP analysis
-SVR_6MWT.shap_analysis = SHAPPlots.shap_values_calculation(SVR_6MWT, 'svr', x_train_6MWT, x_test_6MWT)
+SVR_6MWT.shap_analysis = SHAPPlots.shap_values_calculation(SVR_6MWT, "svr", x_train_6MWT, x_test_6MWT)

@@ -5,7 +5,8 @@ from sklearn.svm import SVC
 from skopt.space import Real, Integer, Categorical
 from scipy.stats import uniform, randint
 
-#TODO: find a way to collect training accuracies
+
+# TODO: find a way to collect training accuracies
 class OptimisationMethods:
     def __init__(self):
         pass
