@@ -72,7 +72,11 @@ class OptimisationMethods:
     @staticmethod
     def random_search(self, model, n_iter, k_folds):
 
-        pbounds = self._get_pbounds_for_random(model.params_distrib)
+        if model.name == "svc" or model.name == "svr":
+            pbounds = self._get_pbounds_for_svm(model.name, "random", model.params_distrib)
+        else:
+            raise NotImplementedError("Random search not implemented for this model.")
+
         print("⚙️ Starting RandomizedSearchCV optimisation...")
 
         cv_splitter = KFold(n_splits=k_folds, shuffle=True, random_state=42)
@@ -94,8 +98,11 @@ class OptimisationMethods:
     def bayesian_search(self, model, n_iter, k_folds):
         print("⚙️ Starting Bayesian Search Optimization...")
 
-        pbounds = self._get_pbounds_for_bayesian_search(model.params_distrib)
-
+        if model.name == "svc" or model.name == "svr":
+            pbounds = self._get_pbounds_for_bayesian_search(model.name, "bayesian", model.params_distrib)
+        else:
+            raise NotImplementedError("Bayesian search not implemented for this model.")
+        
         cv_splitter = KFold(n_splits=k_folds, shuffle=True, random_state=42)
 
         search = BayesSearchCV(
@@ -111,10 +118,19 @@ class OptimisationMethods:
 
         return search
 
-    def bayesian_optim(self, model, X, y):
+    @staticmethod
+    def bayesian_optim(model, X, y):
 
-        pbounds, kernel_options = self._get_pbounds_for_bayesian_optim(model.params_distrib)
+        #TODO: rearrangeing this function to use correctly the _get_pbounds function
+        pbounds = {
+            "C": (1, 1000),
+            "gamma": (0.001, 1),
+            "degree": (2, 5),
+            "kernel": (0, 2),  # 0: 'linear', 1: 'poly', 2: 'rbf'
+        }
+        kernel_options = ["linear", "poly", "rbf"]
 
+        
         def svm_model(C, gamma, degree, kernel):
             params = {"C": C, "gamma": gamma, "degree": int(degree), "kernel": kernel_options[int(kernel)]}
             model_to_optim = model.set_params(**params)
