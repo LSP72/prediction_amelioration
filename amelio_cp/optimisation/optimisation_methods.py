@@ -61,12 +61,19 @@ class OptimisationMethods:
                     pbounds["epsilon"] = (epsilon_low, epsilon_high)
                 else:
                     raise ValueError("epsilon bounds must be provided for SVR model.")
-                
+        else:
+            raise ValueError(f"No optimisation method named {optim_method}.")
+        
         return pbounds
 
     @staticmethod
-    def _get_pbounds_for_rf(params_distrib: dict):
-        pass
+    def _get_pbounds_for_rf(model_name: str, optim_method: str, params_distrib: dict):
+        if optim_method=="random" or optim_method=="bayesian_search" or optim_method=="bayesian_optim":
+            raise NotImplementedError("Soon to be developped.")
+        else:
+            raise ValueError(f"No optimisation method named {optim_method}.")
+        return None
+
 
 # %% Optimisation functions    
     @staticmethod
@@ -131,7 +138,12 @@ class OptimisationMethods:
         kernel_options = ["linear", "poly", "rbf"]
 
         
-        def svm_model(C, gamma, degree, kernel):
+        def function_to_min(C, gamma, degree, kernel):
+            """
+            This function updates the model with the given hyperparameters,
+            performs cross-validation, and returns the mean accuracy (to be maximized).
+            """
+
             params = {"C": C, "gamma": gamma, "degree": int(degree), "kernel": kernel_options[int(kernel)]}
             model_to_optim = model.set_params(**params)
             cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
@@ -140,7 +152,7 @@ class OptimisationMethods:
 
         print("⚙️ Starting Bayesian optimisation...")
 
-        optimizer = BayesianOptimization(f=svm_model, pbounds=pbounds, random_state=42, verbose=3)
+        optimizer = BayesianOptimization(f=function_to_min, pbounds=pbounds, random_state=42, verbose=3)
         optimizer.maximize(init_points=10, n_iter=100)
         best_params = optimizer.max["params"]
         best_params["degree"] = int(best_params["degree"])  # Convert to int

@@ -1,5 +1,5 @@
 import pandas as pd
-from pandas import DataFrame, Series
+from pandas import DataFrame
 import amelio_cp.processing.old_featurExtractor as mat_to_df
 
 

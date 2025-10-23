@@ -37,8 +37,6 @@ class ClassifierModel:
         self.random_state = 42  # setting a default rdm state
         self.optim_method = None
 
-    # TODO: checking if the test data are in the same order than train ones
-
     # Specific function to add the training data
     def add_train_data(self, X, y):
         """Function that will add new samples to the training set."""

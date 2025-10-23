@@ -22,7 +22,7 @@ class OptimisationMethodsLin(OptimisationMethods):
         }
         kernel_options = ["linear", "poly", "rbf"]
 
-        def svr_model(C, gamma, epsilon, degree, kernel):
+        def function_to_min(C, gamma, epsilon, degree, kernel):
             params = {
                 "C": C,
                 "gamma": gamma,
@@ -37,7 +37,7 @@ class OptimisationMethodsLin(OptimisationMethods):
 
         print("⚙️ Starting Bayesian optimisation...")
 
-        optimizer = BayesianOptimization(f=svr_model, pbounds=pbounds, random_state=42, verbose=3)
+        optimizer = BayesianOptimization(f=function_to_min, pbounds=pbounds, random_state=42, verbose=3)
         optimizer.maximize(init_points=10, n_iter=100)
         best_params = optimizer.max["params"]
         best_params["degree"] = int(best_params["degree"])  # Convert to int
