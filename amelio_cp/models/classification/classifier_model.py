@@ -173,17 +173,6 @@ class ClassifierModel:
             "CV accuracy": cv_acc.mean(),
         }
 
-    # TODO: check if well defined in other functions, i.e. model.model.fit()
-    def fit(self, X, y):
-        """
-        Train the model with the (X, y) dataset
-        Actually, refits the current optimized model on a new dataset,
-        without hyperparameter tuning.
-        """
-        if self.model is None:
-            raise ValueError("Model has not been optimised yet.")
-        return self.model.fit(X, y)
-
     def save(self, path):
         """Save model and training data."""
         joblib.dump(
