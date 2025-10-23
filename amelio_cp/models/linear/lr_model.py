@@ -37,9 +37,9 @@ class LRModel(LinearModel):
         # Evaluate with K-Fold CV for stability
         # K-Fold CV setup
         cv_splitter = KFold(n_splits=5, shuffle=True, random_state=self.random_state)
-        cv_r2 = cross_val_score(self.model, self.X_train, self.y_train, cv=cv_splitter, scoring="r2")
+        cv_r2 = cross_val_score(self.model, self.X_train, self.y_train, cv=cv_splitter, scoring=self.secondary_scoring)
         cv_rmse = np.sqrt(
-            -cross_val_score(self.model, self.X_train, self.y_train, cv=cv_splitter, scoring="neg_mean_squared_error")
+            -cross_val_score(self.model, self.X_train, self.y_train, cv=cv_splitter, scoring=self.primary_scoring)
         )
         print(f"📊 CV R²: {cv_r2.mean():.4f} ± {cv_r2.std():.4f}")
         print(f"📊 CV RMSE: {cv_rmse.mean():.4f} ± {cv_rmse.std():.4f}")

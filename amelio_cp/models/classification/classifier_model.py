@@ -28,6 +28,8 @@ class ClassifierModel:
             "degree": [2, 5],
             "kernel": ["linear", "poly", "rbf"]
         }  # default param distributions, can be updated in child class
+        self.primary_scoring = "accuracy"
+        self.secondary_scoring = "f1"
         self.best_params = (
             None  # stores the best parameters, and updates it everytime the addition of a sample allows better results
         )
@@ -133,10 +135,6 @@ class ClassifierModel:
         if self.X_train is None or self.y_train is None:  # Check if there is some data
             raise ValueError("❌ No data available for training.")
 
-        # TODO: create functions to adjust pbounds for each optimisation model
-        # # Define search space
-        # pbounds = self.param_distributions
-
         # Creating the optimisation loop
         if method == "random":
             search = OptimisationMethods.random_search(
@@ -150,7 +148,7 @@ class ClassifierModel:
                 self.model, n_iter, k_folds=5, primary_scoring=self.primary_scoring
             )
             search.fit(self.X_train_scaled, self.y_train)  # training
-            print("Byesian Search optimisation completed.")
+            print("Bayesian Search optimisation completed.")
 
         elif method == "bayesian_optim":
             search = OptimisationMethods.bayesian_optim(self.model, self.X_train_scaled, self.y_train)
@@ -171,7 +169,7 @@ class ClassifierModel:
         # Evaluate with K-Fold CV for stability
         # K-Fold CV setup
         cv_splitter = KFold(n_splits=5, shuffle=True, random_state=self.random_state)
-        cv_acc = cross_val_score(self.model, self.X_train_scaled, self.y_train, cv=cv_splitter, scoring="accuracy")
+        cv_acc = cross_val_score(self.model, self.X_train_scaled, self.y_train, cv=cv_splitter, scoring=self.primary_scoring)
         print(f"📊 CV accuracy: {cv_acc.mean():.4f} ± {cv_acc.std():.4f}")
 
         return {
