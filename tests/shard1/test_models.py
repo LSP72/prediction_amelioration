@@ -1,7 +1,8 @@
 import numpy as np
 
 from amelio_cp.models.linear.linear_model import LinearModel
-#%%
+
+
 def test_linear_model():
     model = LinearModel()
 
@@ -20,5 +21,4 @@ def test_linear_model():
         np.array([42, 1, 1000, 0.001, 0.1, 2, 5]),
     )
 
-    #TODO: model.add_train_data and add_test_data tests w/ fake data and compare
-# %%
+    # TODO: model.add_train_data and add_test_data tests w/ fake data and compare
