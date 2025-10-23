@@ -24,15 +24,24 @@ def prepare_data(data_path, features_path, condition_to_predict, model_name):
     if condition_to_predict == "VIT":
         all_data = all_data.drop(["6MWT_POST"], axis=1)
         all_data = all_data.dropna()
-        y = all_data["VIT_POST"]
+        if model_name == 'svc':
+            y = Process.calculate_MCID(all_data["VIT_PRE"], all_data["VIT_POST"], "VIT")
+        else:
+            y = all_data["VIT_POST"]
 
     elif condition_to_predict == "6MWT":
         all_data = all_data.drop(["VIT_POST"], axis=1)
         all_data = all_data.dropna()
-        y = all_data["6MWT_POST"]
+        if model_name == 'svc':
+            y = Process.calculate_MCID(all_data["6MWT_PRE"], all_data["6MWT_POST"], "6MWT", all_data["GMFCS"])
+        else:
+            y = all_data["6MWT_POST"]
 
-    if model_name == "svc":
-        y = Process.calculate_MCID(all_data, condition_to_predict)
+    else:
+        raise ValueError("Condition to predict not recognized. Choose either 'VIT' or '6MWT'.")
+
+    # if model_name == "svc":
+    #     y = Process.calculate_MCID(all_data, condition_to_predict)
 
     features = pd.read_excel(features_path)
     selected_features = features["19"].dropna().to_list()
@@ -47,7 +56,7 @@ def load_data(X, y, model, test_size=0.2):
     model.add_data(X, y, test_size)
 
 
-def append_data(results_dict, model, id, time, precision_score, conf_matrix, r2=None):
+def append_data(results_dict, model, id, time, precision_score, conf_matrix, y_true, y_pred, r2=None):
     results_dict["id_" + str(id)] = {
         "model_name": model.name,
         "optim_method": model.optim_method,
@@ -59,6 +68,8 @@ def append_data(results_dict, model, id, time, precision_score, conf_matrix, r2=
         "precision_score": precision_score,
         "confusion_matrix": conf_matrix,
         "optim_time": time,
+        "y_true": y_true,
+        "y_pred": y_pred
     }
 
     if model.name == "svr":
@@ -68,8 +79,8 @@ def append_data(results_dict, model, id, time, precision_score, conf_matrix, r2=
     return results_dict
 
 
-def save_data(results_dict, model_name, output_path):
-    pickle_file_name = output_path + model_name + ".pkl"
+def save_data(results_dict, model_name, condition_to_predict, output_path):
+    pickle_file_name = output_path + model_name + "_" + condition_to_predict + ".pkl"
     with open(pickle_file_name, "wb") as file:
         pkl.dump(results_dict, file)
 
@@ -97,14 +108,32 @@ def main(model_name, seeds_list, condition_to_predict):
         optim_time = time.time() - starting_time
 
         if model_name == "svr":
-            delta_vit_true = [
-                1 if model.y_test.iloc[i] - model.X_test["VIT_PRE"].iloc[i] > 0.1 else 0
-                for i in range(len(model.y_test))
-            ]
-            delta_vit_pred = [1 if y_pred[i] - model.X_test["VIT_PRE"].iloc[i] > 0.1 else 0 for i in range(len(y_pred))]
-            conf_matrix = confusion_matrix(delta_vit_true, delta_vit_pred)
+            if condition_to_predict == "VIT":
+                classif_true = [
+                    1 if model.y_test.iloc[i] - model.X_test["VIT_PRE"].iloc[i] > 0.1 else 0
+                    for i in range(len(model.y_test))
+                ]
+                classif_pred = [1 if y_pred[i] - model.X_test["VIT_PRE"].iloc[i] > 0.1 else 0 for i in range(len(y_pred))]
+            elif condition_to_predict == "6MWT":
+                GMFCS_MCID = {1: range(4, 29), 2: range(4, 29), 3: range(9, 20), 4: range(10, 28)}
+                delta_true = model.y_test - model.X_test["6MWT_PRE"]
+                delta_pred = y_pred - model.X_test["6MWT_PRE"]
+                classif_true = []
+                classif_pred = []
+                for i in range(len(delta_true)):
+                    if delta_true.iloc[i] >= max(GMFCS_MCID[model.X_test["GMFCS"].iloc[i]]):
+                        classif_true.append(1)
+                    else:
+                        classif_true.append(0)
+                for i in range(len(delta_pred)):
+                    if delta_pred.iloc[i] >= max(GMFCS_MCID[model.X_test["GMFCS"].iloc[i]]):
+                        classif_pred.append(1)
+                    else:
+                        classif_pred.append(0)  
+
+            conf_matrix = confusion_matrix(classif_true, classif_pred)
             r2 = r2_score(model.y_test, y_pred)
-            precision_score = accuracy_score(delta_vit_true, delta_vit_pred)
+            precision_score = accuracy_score(classif_true, classif_pred)
 
         elif model_name == "svc":
             conf_matrix = confusion_matrix(model.y_test, y_pred)
@@ -114,9 +143,9 @@ def main(model_name, seeds_list, condition_to_predict):
             # model.shap_analysis = SHAPPlots.shap_values_calculation(model)
             # SHAPPlots.plot_shap_summary(model, features_names, output_path_shap, show=False)
 
-        results_dict = append_data(results_dict, model, i, optim_time, precision_score, conf_matrix, r2)
+        results_dict = append_data(results_dict, model, i, optim_time, precision_score, conf_matrix, model.y_test, y_pred, r2)
 
-    save_data(results_dict, model_name, output_path)
+    save_data(results_dict, model_name, condition_to_predict, output_path)
 
 
 if __name__ == "__main__":
@@ -126,4 +155,5 @@ if __name__ == "__main__":
     seeds_list = [i for i in range(1, 101)]
 
     for model_name in model_name_list:
-        main(model_name, seeds_list, "6MWT")
+        main(model_name, seeds_list, "VIT")
+        # main(model_name, seeds_list, "6MWT")
