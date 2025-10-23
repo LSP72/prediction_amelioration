@@ -129,7 +129,7 @@ class LinearModel:
                 self.model, n_iter, k_folds=5, primary_scoring=self.primary_scoring
             )
             search.fit(self.X_train_scaled, self.y_train)  # training
-            print("Byesian Search optimisation completed.")
+            print("Bayesian Search optimisation completed.")
 
         elif method == "bayesian_optim":
             search = OptimisationMethodsLin.bayesian_optim(self.model, self.X_train_scaled, self.y_train)
