@@ -11,68 +11,64 @@ class OptimisationMethods:
     def __init__(self):
         pass
 
-    # Functions to get the right pbounds shape
-
+# %% Functions to get the right pbounds shape
     @staticmethod
-    def _get_pbounds_for_random(params_distrib: dict):
-        """
-        Build pbounds for RandomizedSearchCV from a simple dict.
-        Example:
-            {"C": [1, 1000], "gamma": [0.001, 0.1], "kernel": ["linear","poly","rbf"]}
-        """
-
+    def _get_pbounds_for_svm(model_name: str, optim_method: str, params_distrib: dict):
         C_low, C_high = params_distrib["C"]
         gamma_low, gamma_high = params_distrib["gamma"]
         deg_low, deg_high = params_distrib["degree"]
+        if model_name == "svr":
+            if "epsilon" in params_distrib.keys():
+                epsilon_low, epsilon_high = params_distrib["epsilon"]
+            else:
+                raise ValueError("epsilon bounds must be provided for SVR model.")
 
-        pbounds = {
-            "C": uniform(C_low, C_high),
-            "gamma": uniform(gamma_low, gamma_high),
-            "degree": randint(deg_low, deg_high),
-            "kernel": ["linear", "poly", "rbf"]
-        }
+        if optim_method == "random":
+            pbounds = {
+                "C": uniform(C_low, C_high),
+                "gamma": uniform(gamma_low, gamma_high),
+                "degree": randint(deg_low, deg_high),
+                "kernel": ["linear", "poly", "rbf"]
+            }
+            if model_name == "svr":
+                if "epsilon" in params_distrib.keys():
+                    pbounds["epsilon"] = uniform(epsilon_low, epsilon_high)
+                else:
+                    raise ValueError("epsilon bounds must be provided for SVR model.")
+                
+        elif optim_method == "bayesian_search":
+            pbounds = {
+                "C": Real(C_low, C_high), # prior = "log-uniform"
+                "gamma": Real(gamma_low, gamma_high), # prior = "log-uniform"
+                "degree": Integer(deg_low, deg_high),
+                "kernel": Categorical(["linear", "poly", "rbf"])
+            }
+            if model_name == "svr":
+                if "epsilon" in params_distrib.keys():
+                    pbounds["epsilon"] = Real(epsilon_low, epsilon_high)
+                else:
+                    raise ValueError("epsilon bounds must be provided for SVR model.")
+                
+        elif optim_method == "bayesian_optim":
+            pbounds = {
+                "C": (C_low, C_high),
+                "gamma": (gamma_low, gamma_high),
+                "degree": (deg_low, deg_high),
+                "kernel": (0, 2)  # 0: 'linear', 1: 'poly', 2: 'rbf'
+            }
+            if model_name == "svr":
+                if "epsilon" in params_distrib.keys():
+                    pbounds["epsilon"] = (epsilon_low, epsilon_high)
+                else:
+                    raise ValueError("epsilon bounds must be provided for SVR model.")
+                
         return pbounds
 
     @staticmethod
-    def _get_pbounds_for_bayesian_search(params_distrib: dict):
-        """
-        Build pbounds for BeayesSearchCV from a simple dict.
-        Example:
-            {"C": [1, 1000], "gamma": [0.001, 0.1], "kernel": ["linear","poly","rbf"]}
-        """
+    def _get_pbounds_for_rf(params_distrib: dict):
+        pass
 
-        C_low, C_high = params_distrib["C"]
-        gamma_low, gamma_high = params_distrib["gamma"]
-        deg_low, deg_high = params_distrib["degree"]
-
-        pbounds = {
-            "C": Real(C_low, C_high),
-            "gamma": Real(gamma_low, gamma_high),
-            "degree": Integer(deg_low, deg_high),
-            "kernel": Categorical(["linear", "poly", "rbf"])
-        }
-        return pbounds
-
-    @staticmethod
-    def _get_pbounds_for_bayesian_optim(params_distrib: dict):
-        """
-        Build pbounds for Bayesian optimisation from a simple dict.
-        Example:
-            {"C": [1, 1000], "gamma": [0.001, 0.1], "kernel": ["linear","poly","rbf"]}
-        """
-
-        C_low, C_high = params_distrib["C"]
-        gamma_low, gamma_high = params_distrib["gamma"]
-        deg_low, deg_high = params_distrib["degree"]
-
-        pbounds = {
-            "C": (C_low, C_high),
-            "gamma": (gamma_low, gamma_high),
-            "degree": (deg_low, deg_high),
-            "kernel": (0, len(params_distrib["kernel"]) - 1)  # 0: 'linear', 1: 'poly', 2: 'rbf'
-        }
-        return pbounds, params_distrib["kernel"]
-
+# %% Optimisation functions    
     @staticmethod
     def random_search(self, model, n_iter, k_folds):
 
