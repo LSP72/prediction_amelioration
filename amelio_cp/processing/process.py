@@ -118,6 +118,7 @@ class Process:
 
         return all_data
 
+# TODO: enable the use of MCID calculation without all the data
     @staticmethod
     def calculate_MCID(all_data: DataFrame, variable: str) -> list:
         if variable == "VIT":
