@@ -26,7 +26,7 @@ class ClassifierModel:
             "C": [1, 1000],
             "gamma": [0.001, 0.1],
             "degree": [2, 5],
-            "kernel": ["linear", "poly", "rbf"]
+            "kernel": ["linear", "poly", "rbf"],
         }  # default param distributions, can be updated in child class
         self.primary_scoring = "accuracy"
         self.secondary_scoring = "f1"
@@ -167,7 +167,9 @@ class ClassifierModel:
         # Evaluate with K-Fold CV for stability
         # K-Fold CV setup
         cv_splitter = KFold(n_splits=5, shuffle=True, random_state=self.random_state)
-        cv_acc = cross_val_score(self.model, self.X_train_scaled, self.y_train, cv=cv_splitter, scoring=self.primary_scoring)
+        cv_acc = cross_val_score(
+            self.model, self.X_train_scaled, self.y_train, cv=cv_splitter, scoring=self.primary_scoring
+        )
         print(f"📊 CV accuracy: {cv_acc.mean():.4f} ± {cv_acc.std():.4f}")
 
         return {

@@ -11,7 +11,7 @@ class OptimisationMethods:
     def __init__(self):
         pass
 
-# %% Functions to get the right pbounds shape
+    # %% Functions to get the right pbounds shape
     @staticmethod
     def _get_pbounds_for_svm(model_name: str, optim_method: str, params_distrib: dict):
         C_low, C_high = params_distrib["C"]
@@ -28,33 +28,33 @@ class OptimisationMethods:
                 "C": uniform(C_low, C_high),
                 "gamma": uniform(gamma_low, gamma_high),
                 "degree": randint(deg_low, deg_high),
-                "kernel": ["linear", "poly", "rbf"]
+                "kernel": ["linear", "poly", "rbf"],
             }
             if model_name == "svr":
                 if "epsilon" in params_distrib.keys():
                     pbounds["epsilon"] = uniform(epsilon_low, epsilon_high)
                 else:
                     raise ValueError("epsilon bounds must be provided for SVR model.")
-                
+
         elif optim_method == "bayesian_search":
             pbounds = {
-                "C": Real(C_low, C_high), # prior = "log-uniform"
-                "gamma": Real(gamma_low, gamma_high), # prior = "log-uniform"
+                "C": Real(C_low, C_high),  # prior = "log-uniform"
+                "gamma": Real(gamma_low, gamma_high),  # prior = "log-uniform"
                 "degree": Integer(deg_low, deg_high),
-                "kernel": Categorical(["linear", "poly", "rbf"])
+                "kernel": Categorical(["linear", "poly", "rbf"]),
             }
             if model_name == "svr":
                 if "epsilon" in params_distrib.keys():
                     pbounds["epsilon"] = Real(epsilon_low, epsilon_high)
                 else:
                     raise ValueError("epsilon bounds must be provided for SVR model.")
-                
+
         elif optim_method == "bayesian_optim":
             pbounds = {
                 "C": (C_low, C_high),
                 "gamma": (gamma_low, gamma_high),
                 "degree": (deg_low, deg_high),
-                "kernel": (0, 2)  # 0: 'linear', 1: 'poly', 2: 'rbf'
+                "kernel": (0, 2),  # 0: 'linear', 1: 'poly', 2: 'rbf'
             }
             if model_name == "svr":
                 if "epsilon" in params_distrib.keys():
@@ -63,19 +63,18 @@ class OptimisationMethods:
                     raise ValueError("epsilon bounds must be provided for SVR model.")
         else:
             raise ValueError(f"No optimisation method named {optim_method}.")
-        
+
         return pbounds
 
     @staticmethod
     def _get_pbounds_for_rf(model_name: str, optim_method: str, params_distrib: dict):
-        if optim_method=="random" or optim_method=="bayesian_search" or optim_method=="bayesian_optim":
+        if optim_method == "random" or optim_method == "bayesian_search" or optim_method == "bayesian_optim":
             raise NotImplementedError("Soon to be developped.")
         else:
             raise ValueError(f"No optimisation method named {optim_method}.")
         return None
 
-
-# %% Optimisation functions    
+    # %% Optimisation functions
     @staticmethod
     def random_search(self, model, n_iter, k_folds):
 
@@ -109,7 +108,7 @@ class OptimisationMethods:
             pbounds = self._get_pbounds_for_bayesian_search(model.name, "bayesian", model.params_distrib)
         else:
             raise NotImplementedError("Bayesian search not implemented for this model.")
-        
+
         cv_splitter = KFold(n_splits=k_folds, shuffle=True, random_state=42)
 
         search = BayesSearchCV(
@@ -128,7 +127,7 @@ class OptimisationMethods:
     @staticmethod
     def bayesian_optim(model, X, y):
 
-        #TODO: rearrangeing this function to use correctly the _get_pbounds function
+        # TODO: rearrangeing this function to use correctly the _get_pbounds function
         pbounds = {
             "C": (1, 1000),
             "gamma": (0.001, 1),
@@ -137,7 +136,6 @@ class OptimisationMethods:
         }
         kernel_options = ["linear", "poly", "rbf"]
 
-        
         def function_to_min(C, gamma, degree, kernel):
             """
             This function updates the model with the given hyperparameters,

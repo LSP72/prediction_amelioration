@@ -6,10 +6,11 @@ from sklearn.svm import SVR
 from skopt.space import Real, Integer, Categorical
 from scipy.stats import uniform, randint
 
+
 class OptimisationMethodsLin(OptimisationMethods):
     def __init__(self):
         super().__init__()
-        
+
     @staticmethod
     def bayesian_optim(model, X, y):
 

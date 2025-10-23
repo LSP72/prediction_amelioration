@@ -24,7 +24,7 @@ def prepare_data(data_path, features_path, condition_to_predict, model_name):
     if condition_to_predict == "VIT":
         all_data = all_data.drop(["6MWT_POST"], axis=1)
         all_data = all_data.dropna()
-        if model_name == 'svc':
+        if model_name == "svc":
             y = Process.calculate_MCID(all_data["VIT_PRE"], all_data["VIT_POST"], "VIT")
         else:
             y = all_data["VIT_POST"]
@@ -32,7 +32,7 @@ def prepare_data(data_path, features_path, condition_to_predict, model_name):
     elif condition_to_predict == "6MWT":
         all_data = all_data.drop(["VIT_POST"], axis=1)
         all_data = all_data.dropna()
-        if model_name == 'svc':
+        if model_name == "svc":
             y = Process.calculate_MCID(all_data["6MWT_PRE"], all_data["6MWT_POST"], "6MWT", all_data["GMFCS"])
         else:
             y = all_data["6MWT_POST"]
@@ -69,7 +69,7 @@ def append_data(results_dict, model, id, time, precision_score, conf_matrix, y_t
         "confusion_matrix": conf_matrix,
         "optim_time": time,
         "y_true": y_true,
-        "y_pred": y_pred
+        "y_pred": y_pred,
     }
 
     if model.name == "svr":
@@ -113,9 +113,13 @@ def main(model_name, seeds_list, condition_to_predict):
                     1 if model.y_test.iloc[i] - model.X_test["VIT_PRE"].iloc[i] > 0.1 else 0
                     for i in range(len(model.y_test))
                 ]
-                classif_pred = [1 if y_pred[i] - model.X_test["VIT_PRE"].iloc[i] > 0.1 else 0 for i in range(len(y_pred))]
+                classif_pred = [
+                    1 if y_pred[i] - model.X_test["VIT_PRE"].iloc[i] > 0.1 else 0 for i in range(len(y_pred))
+                ]
             elif condition_to_predict == "6MWT":
-                classif_true = Process.calculate_MCID(model.X_test["6MWT_PRE"], model.y_test, model.X_test["GMFCS"], "6MWT")
+                classif_true = Process.calculate_MCID(
+                    model.X_test["6MWT_PRE"], model.y_test, model.X_test["GMFCS"], "6MWT"
+                )
                 classif_pred = Process.calculate_MCID(model.X_test["6MWT_PRE"], y_pred, model.X_test["GMFCS"], "6MWT")
 
             conf_matrix = confusion_matrix(classif_true, classif_pred)
@@ -130,7 +134,9 @@ def main(model_name, seeds_list, condition_to_predict):
             # model.shap_analysis = SHAPPlots.shap_values_calculation(model)
             # SHAPPlots.plot_shap_summary(model, features_names, output_path_shap, show=False)
 
-        results_dict = append_data(results_dict, model, i, optim_time, precision_score, conf_matrix, model.y_test, y_pred, r2)
+        results_dict = append_data(
+            results_dict, model, i, optim_time, precision_score, conf_matrix, model.y_test, y_pred, r2
+        )
 
     save_data(results_dict, model_name, condition_to_predict, output_path)
 
