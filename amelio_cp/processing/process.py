@@ -120,26 +120,27 @@ class Process:
 
 # TODO: enable the use of MCID calculation without all the data
     @staticmethod
-    def calculate_MCID(all_data: DataFrame, variable: str) -> list:
+    def calculate_MCID(pre_data, post_data, variable, gmfcs_data=None) -> list:
         if variable == "VIT":
-            delta_VIT = all_data[variable + "_POST"] - all_data[variable + "_PRE"]
+            delta_VIT = post_data - pre_data
             MCID_VIT = []
             for i in delta_VIT:
                 if i >= 0.1:
                     MCID_VIT.append(1)
                 else:
                     MCID_VIT.append(0)
-            return pd.Series(MCID_VIT, index=all_data.index)
+            return pd.Series(MCID_VIT, index=pre_data.index)
 
         elif variable == "6MWT":
             GMFCS_MCID = {1: range(4, 29), 2: range(4, 29), 3: range(9, 20), 4: range(10, 28)}
-            delta_6MWT = all_data[variable + "_POST"] - all_data[variable + "_PRE"]
+            delta_6MWT = post_data - pre_data
             MCID_6MWT = []
             for i in range(len(delta_6MWT)):
-                if delta_6MWT.iloc[i] >= max(GMFCS_MCID[all_data["GMFCS"].iloc[i]]):
+                if delta_6MWT.iloc[i] >= max(GMFCS_MCID[gmfcs_data.iloc[i]]):
                     MCID_6MWT.append(1)
                 else:
                     MCID_6MWT.append(0)
-            return pd.Series(MCID_6MWT, index=all_data.index)
+            return pd.Series(MCID_6MWT, index=gmfcs_data.index)
+        
         else:
             raise ValueError("Variable not recognized. Use 'VIT', or '6MWT'.")
