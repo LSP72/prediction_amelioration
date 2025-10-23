@@ -11,16 +11,72 @@ class OptimisationMethods:
     def __init__(self):
         pass
 
+    # Functions to get the right pbounds shape
+
     @staticmethod
-    def random_search(model, n_iter, k_folds):
+    def _get_pbounds_for_random(params_distrib: dict):
+        """
+        Build pbounds for RandomizedSearchCV from a simple dict.
+        Example:
+            {"C": [1, 1000], "gamma": [0.001, 0.1], "kernel": ["linear","poly","rbf"]}
+        """
+
+        C_low, C_high = params_distrib["C"]
+        gamma_low, gamma_high = params_distrib["gamma"]
+        deg_low, deg_high = params_distrib["degree"]
 
         pbounds = {
-            "C": uniform(1, 1000),
-            "gamma": uniform(0.001, 0.1),
-            "degree": randint(2, 5),
-            "kernel": ["linear", "poly", "rbf"],  # categorical options
+            "C": uniform(C_low, C_high),
+            "gamma": uniform(gamma_low, gamma_high),
+            "degree": randint(deg_low, deg_high),
+            "kernel": ["linear", "poly", "rbf"]
         }
+        return pbounds
 
+    @staticmethod
+    def _get_pbounds_for_bayesian_search(params_distrib: dict):
+        """
+        Build pbounds for BeayesSearchCV from a simple dict.
+        Example:
+            {"C": [1, 1000], "gamma": [0.001, 0.1], "kernel": ["linear","poly","rbf"]}
+        """
+
+        C_low, C_high = params_distrib["C"]
+        gamma_low, gamma_high = params_distrib["gamma"]
+        deg_low, deg_high = params_distrib["degree"]
+
+        pbounds = {
+            "C": Real(C_low, C_high),
+            "gamma": Real(gamma_low, gamma_high),
+            "degree": Integer(deg_low, deg_high),
+            "kernel": Categorical(["linear", "poly", "rbf"])
+        }
+        return pbounds
+
+    @staticmethod
+    def _get_pbounds_for_bayesian_optim(params_distrib: dict):
+        """
+        Build pbounds for Bayesian optimisation from a simple dict.
+        Example:
+            {"C": [1, 1000], "gamma": [0.001, 0.1], "kernel": ["linear","poly","rbf"]}
+        """
+
+        C_low, C_high = params_distrib["C"]
+        gamma_low, gamma_high = params_distrib["gamma"]
+        deg_low, deg_high = params_distrib["degree"]
+
+        pbounds = {
+            "C": (C_low, C_high),
+            "gamma": (gamma_low, gamma_high),
+            "degree": (deg_low, deg_high),
+            "kernel": (0, len(params_distrib["kernel"]) - 1)  # 0: 'linear', 1: 'poly', 2: 'rbf'
+        }
+        return pbounds, params_distrib["kernel"]
+
+    @staticmethod
+    def random_search(self, model, n_iter, k_folds):
+
+        pbounds = self._get_pbounds_for_random(model.params_distrib)
         print("⚙️ Starting RandomizedSearchCV optimisation...")
 
         cv_splitter = KFold(n_splits=k_folds, shuffle=True, random_state=42)
@@ -39,15 +95,10 @@ class OptimisationMethods:
         return search
 
     @staticmethod
-    def bayesian_search(model, n_iter, k_folds):
+    def bayesian_search(self, model, n_iter, k_folds):
         print("⚙️ Starting Bayesian Search Optimization...")
 
-        pbounds = {
-            "C": Real(1, 1e3, prior="log-uniform"),
-            "gamma": Real(1e-3, 1, prior="log-uniform"),
-            "degree": Integer(2, 5),
-            "kernel": Categorical(["linear", "poly", "rbf"]),
-        }
+        pbounds = self._get_pbounds_for_bayesian_search(model.params_distrib)
 
         cv_splitter = KFold(n_splits=k_folds, shuffle=True, random_state=42)
 
@@ -64,16 +115,9 @@ class OptimisationMethods:
 
         return search
 
-    @staticmethod
-    def bayesian_optim(model, X, y):
+    def bayesian_optim(self, model, X, y):
 
-        pbounds = {
-            "C": (1, 1000),
-            "gamma": (0.001, 1),
-            "degree": (2, 5),
-            "kernel": (0, 2),  # 0: 'linear', 1: 'poly', 2: 'rbf'
-        }
-        kernel_options = ["linear", "poly", "rbf"]
+        pbounds, kernel_options = self._get_pbounds_for_bayesian_optim(model.params_distrib)
 
         def svm_model(C, gamma, degree, kernel):
             params = {"C": C, "gamma": gamma, "degree": int(degree), "kernel": kernel_options[int(kernel)]}

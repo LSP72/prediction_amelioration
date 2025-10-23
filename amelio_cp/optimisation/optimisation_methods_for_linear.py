@@ -104,6 +104,7 @@ class OptimisationMethodsLin:
             "gamma": float(best_params["gamma"]),
             "degree": int(best_params["degree"]),
             "kernel": best_params["kernel"],
+            "epsilon": float(best_params["epsilon"]),
         }
 
         best_model = model.set_params(**final_params)
