@@ -1,70 +1,15 @@
+from .optimisation_methods import OptimisationMethods
 from sklearn.model_selection import RandomizedSearchCV, KFold, StratifiedKFold, cross_val_score
 from skopt import BayesSearchCV
 from bayes_opt import BayesianOptimization
-from sklearn.svm import SVC
+from sklearn.svm import SVR
 from skopt.space import Real, Integer, Categorical
 from scipy.stats import uniform, randint
 
-
-class OptimisationMethodsLin:
+class OptimisationMethodsLin(OptimisationMethods):
     def __init__(self):
-        pass
-
-    @staticmethod
-    def random_search(model, n_iter, k_folds):
-
-        pbounds = {
-            "C": uniform(1, 1000),
-            "gamma": uniform(0.001, 0.1),
-            "epsilon": uniform(0.001, 1),
-            "degree": randint(2, 5),
-            "kernel": ["linear", "poly", "rbf"],  # categorical options
-        }
-
-        print("⚙️ Starting RandomizedSearchCV optimisation...")
-
-        cv_splitter = KFold(n_splits=k_folds, shuffle=True, random_state=42)
-
-        search = RandomizedSearchCV(
-            model,
-            param_distributions=pbounds,
-            n_iter=n_iter,
-            scoring="neg_mean_squared_error",
-            cv=cv_splitter,
-            random_state=42,
-            verbose=1,
-            n_jobs=-1,
-        )
-
-        return search
-
-    @staticmethod
-    def bayesian_search(model, n_iter, k_folds, primary_scoring):
-        print("⚙️ Starting Bayesian Search Optimization...")
-
-        pbounds = {
-            "C": Real(1, 1e3, prior="log-uniform"),
-            "gamma": Real(1e-3, 1, prior="log-uniform"),
-            "epsilon": Real(1e-3, 1, prior="log-uniform"),
-            "degree": Integer(2, 5),
-            "kernel": Categorical(["linear", "poly", "rbf"]),
-        }
-
-        cv_splitter = KFold(n_splits=k_folds, shuffle=True, random_state=42)
-
-        search = BayesSearchCV(
-            model,
-            search_spaces=pbounds,
-            n_iter=n_iter,
-            scoring="neg_mean_squared_error",
-            cv=cv_splitter,
-            random_state=42,
-            n_jobs=-1,
-            verbose=1,
-        )
-
-        return search
-
+        super().__init__()
+        
     @staticmethod
     def bayesian_optim(model, X, y):
 
