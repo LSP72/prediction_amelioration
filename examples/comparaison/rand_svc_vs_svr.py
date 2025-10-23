@@ -115,21 +115,8 @@ def main(model_name, seeds_list, condition_to_predict):
                 ]
                 classif_pred = [1 if y_pred[i] - model.X_test["VIT_PRE"].iloc[i] > 0.1 else 0 for i in range(len(y_pred))]
             elif condition_to_predict == "6MWT":
-                GMFCS_MCID = {1: range(4, 29), 2: range(4, 29), 3: range(9, 20), 4: range(10, 28)}
-                delta_true = model.y_test - model.X_test["6MWT_PRE"]
-                delta_pred = y_pred - model.X_test["6MWT_PRE"]
-                classif_true = []
-                classif_pred = []
-                for i in range(len(delta_true)):
-                    if delta_true.iloc[i] >= max(GMFCS_MCID[model.X_test["GMFCS"].iloc[i]]):
-                        classif_true.append(1)
-                    else:
-                        classif_true.append(0)
-                for i in range(len(delta_pred)):
-                    if delta_pred.iloc[i] >= max(GMFCS_MCID[model.X_test["GMFCS"].iloc[i]]):
-                        classif_pred.append(1)
-                    else:
-                        classif_pred.append(0)  
+                classif_true = Process.calculate_MCID(model.X_test["6MWT_PRE"], model.y_test, model.X_test["GMFCS"], "6MWT")
+                classif_pred = Process.calculate_MCID(model.X_test["6MWT_PRE"], y_pred, model.X_test["GMFCS"], "6MWT")
 
             conf_matrix = confusion_matrix(classif_true, classif_pred)
             r2 = r2_score(model.y_test, y_pred)

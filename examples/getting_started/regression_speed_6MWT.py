@@ -37,7 +37,7 @@ print(selected_data_VIT.columns)
 # %% Extracting data about 6MWT
 all_data_6MWT = all_data.drop(["VIT_POST"], axis=1)
 all_data_6MWT = all_data_6MWT.dropna()
-delta_6MWT = Process.calculate_MCID(all_data_6MWT, "6MWT")
+delta_6MWT = Process.calculate_MCID(all_data["6MWT_PRE"], all_data["6MWT_POST"], "6MWT", all_data["GMFCS"])
 
 data_6MWT = all_data_6MWT.drop(["6MWT_POST"], axis=1)
 selected_data_6MWT = data_6MWT[selected_features]

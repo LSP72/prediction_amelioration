@@ -17,7 +17,7 @@ selected_feature = features["19"].dropna().to_list()
 features_names = features["19_names"].dropna().to_list()
 
 y_vit = all_data["VIT_POST"]
-delta_vit = Process.calculate_MCID(all_data, "VIT")
+delta_vit = Process.calculate_MCID(all_data["VIT_PRE"], all_data["VIT_POST"], "VIT")
 
 data_vit = all_data.drop(["VIT_POST"], axis=1)
 data_vit.dropna()
