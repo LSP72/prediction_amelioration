@@ -118,7 +118,6 @@ class Process:
 
         return all_data
 
-# TODO: enable the use of MCID calculation without all the data
     @staticmethod
     def calculate_MCID(pre_data, post_data, variable, gmfcs_data=None) -> list:
         if variable == "VIT":

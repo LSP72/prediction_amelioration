@@ -18,8 +18,8 @@ features_names = features["19_names"].dropna().to_list()
 
 y_vit = all_data["VIT_POST"]
 y_end = all_data["6MWT_POST"]
-delta_vit = Process.calculate_MCID(all_data, "VIT")
-delta_end = Process.calculate_MCID(all_data, "6MWT")
+delta_vit = Process.calculate_MCID(all_data["VIT_PRE"], all_data["VIT_POST"],  "VIT")
+delta_end = Process.calculate_MCID(all_data["6MWT_PRE"], all_data["6MWT_POST"], "6MWT", all_data["GMFCS"])
 
 data_vit = all_data.drop(["VIT_POST"], axis=1)
 data_vit.dropna()

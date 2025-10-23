@@ -16,9 +16,10 @@ features_names = features["19_names"].dropna().to_list()
 
 # %% Features and labels extraction
 y_vit = all_data["VIT_POST"]
-delta_vit = Process.calculate_MCID(all_data, "VIT")
+delta_vit = Process.calculate_MCID(all_data["VIT_PRE"], all_data["VIT_POST"], "VIT")
 all_data_vit = all_data.drop(["6MWT_POST"], axis=1)
 all_data_vit = all_data_vit.dropna()
+
 
 data_vit = all_data_vit[selected_features]
 print("Number of participants for speed classification:", data_vit.shape[0])
