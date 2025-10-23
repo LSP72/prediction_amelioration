@@ -3,3 +3,7 @@ from amelio_cp.models.classification.svc_model import SVCModel
 from amelio_cp.models.classification.rfc_model import RFCModel
 from amelio_cp.models.linear.rfr_model import RFRModel
 from amelio_cp.models.linear.svr_model import SVRModel
+from amelio_cp.graphs.shap_plots import SHAPPlots
+from amelio_cp.graphs.classification_metrics import ClassifierMetrics
+from amelio_cp.optimisation.optimisation_methods import OptimisationMethods
+from amelio_cp.optimisation.optimisation_methods_for_linear import OptimisationMethodsLin

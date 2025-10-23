@@ -4,12 +4,13 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
 
-# %% SVC
+# %% RFC
 class RFCModel(ClassifierModel):
     def __init__(self):
         super().__init__()
 
-        self.pipeline = Pipeline([("scaler", StandardScaler()), ("svc", RandomForestClassifier())])
+        self.name = "rfc"
+        self.model = RandomForestClassifier()
         self.param_distributions = {}
         self.primary_scoring = "accuracy"
         self.secondary_scoring = "f1"

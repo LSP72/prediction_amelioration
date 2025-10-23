@@ -10,7 +10,7 @@ class RFRModel(LinearModel):
     def __init__(self):
         super().__init__()
 
-        self.pipeline = Pipeline([("rfr", RandomForestRegressor(random_state=72))])
+        self.model = RandomForestRegressor()
 
         self.param_distributions = {
             "rfr__n_estimators": randint(50, 200),
