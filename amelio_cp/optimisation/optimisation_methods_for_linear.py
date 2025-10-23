@@ -1,10 +1,6 @@
 from .optimisation_methods import OptimisationMethods
-from sklearn.model_selection import RandomizedSearchCV, KFold, StratifiedKFold, cross_val_score
-from skopt import BayesSearchCV
+from sklearn.model_selection import KFold, cross_val_score
 from bayes_opt import BayesianOptimization
-from sklearn.svm import SVR
-from skopt.space import Real, Integer, Categorical
-from scipy.stats import uniform, randint
 
 
 class OptimisationMethodsLin(OptimisationMethods):

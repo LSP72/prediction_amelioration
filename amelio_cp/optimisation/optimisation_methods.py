@@ -1,7 +1,6 @@
 from sklearn.model_selection import RandomizedSearchCV, KFold, StratifiedKFold, cross_val_score
 from skopt import BayesSearchCV
 from bayes_opt import BayesianOptimization
-from sklearn.svm import SVC
 from skopt.space import Real, Integer, Categorical
 from scipy.stats import uniform, randint
 
