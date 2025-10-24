@@ -33,7 +33,6 @@ jobs:
           miniforge-version: latest
           activate-environment: amelio_cp
           environment-file: environment.yml
-          channels: conda-forge,defaults
 
       - name: Print conda info
         run: |
