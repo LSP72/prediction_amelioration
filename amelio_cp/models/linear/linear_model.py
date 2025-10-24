@@ -26,6 +26,7 @@ class LinearModel:
         self.params_distributions = {
             "C": [1, 1000],
             "gamma": [0.001, 0.1],
+            "epsilon": [0.01, 1],
             "degree": [2, 5],
             "kernel": ["linear", "poly", "rbf"],
         }  # default param distributions, can be updated in child class

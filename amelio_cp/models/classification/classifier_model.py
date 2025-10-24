@@ -22,12 +22,12 @@ class ClassifierModel:
         self.X_test = None  # features of testing dataset
         self.X_test_scaled = None  # scaled features of testing dataset
         self.y_test = None  # labels of testing dataset
-        self.params_distributions = {
+        self.params_distributions = {  # default param distributions, can be updated in child class
             "C": [1, 1000],
             "gamma": [0.001, 0.1],
             "degree": [2, 5],
             "kernel": ["linear", "poly", "rbf"],
-        }  # default param distributions, can be updated in child class
+        }  
         self.primary_scoring = "accuracy"
         self.secondary_scoring = "f1"
         self.best_params = (
