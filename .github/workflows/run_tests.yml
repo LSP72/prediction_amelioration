@@ -1,0 +1,54 @@
+name: Run the tests
+
+on: [pull_request]
+
+env:
+  PREFIX_WINDOWS: C:\Miniconda3\envs\amelio_cp
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest]
+        shard: [1] # folder in which tests are located
+    name: Tests on ${{ matrix.os }}-shard ${{ matrix.shard }}
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash -l {0}
+
+    steps:
+      - name: Set prefix windows
+        run: |
+          echo "PREFIX=${{ env.PREFIX_WINDOWS }}" >> $GITHUB_ENV
+        if: matrix.os == 'windows-latest'
+
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup environment
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          miniforge-version: latest
+          activate-environment: amelio_cp
+          environment-file: environment.yml
+
+      - name: Print conda info
+        run: |
+          conda info
+          conda list
+
+      - name: Install extra dependencies
+        run: conda install -c conda-forge pytest pytest-cov black codecov packaging
+
+      - name: Run tests with code coverage
+        run: pytest -v --color=yes --cov-report term-missing --cov=amelio_cp --cov-report=xml:coverage.xml tests/shard1
+ 
+      - name: Upload to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          file: ./coverage.xml
+          flags: unittests
+          fail_ci_if_error: true
+          verbose: true

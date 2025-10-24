@@ -118,9 +118,9 @@ def main(model_name, seeds_list, condition_to_predict):
                 ]
             elif condition_to_predict == "6MWT":
                 classif_true = Process.calculate_MCID(
-                    model.X_test["6MWT_PRE"], model.y_test, model.X_test["GMFCS"], "6MWT"
+                    model.X_test["6MWT_PRE"], model.y_test, "6MWT", model.X_test["GMFCS"]
                 )
-                classif_pred = Process.calculate_MCID(model.X_test["6MWT_PRE"], y_pred, model.X_test["GMFCS"], "6MWT")
+                classif_pred = Process.calculate_MCID(model.X_test["6MWT_PRE"], y_pred, "6MWT", model.X_test["GMFCS"])
 
             conf_matrix = confusion_matrix(classif_true, classif_pred)
             r2 = r2_score(model.y_test, y_pred)
@@ -148,5 +148,5 @@ if __name__ == "__main__":
     seeds_list = [i for i in range(1, 101)]
 
     for model_name in model_name_list:
-        main(model_name, seeds_list, "VIT")
-        # main(model_name, seeds_list, "6MWT")
+        # main(model_name, seeds_list, "VIT")
+        main(model_name, seeds_list, "6MWT")
