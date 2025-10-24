@@ -27,7 +27,7 @@ class ClassifierModel:
             "gamma": [0.001, 0.1],
             "degree": [2, 5],
             "kernel": ["linear", "poly", "rbf"],
-        }  
+        }
         self.primary_scoring = "accuracy"
         self.secondary_scoring = "f1"
         self.best_params = (
