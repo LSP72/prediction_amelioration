@@ -40,7 +40,7 @@ jobs:
           conda list
 
       - name: Install extra dependencies
-        run: conda install pytest-cov black pytest pytest-cov codecov packaging -cconda-forge
+        run: conda install -c conda-forge pytest pytest-cov black codecov packaging
 
       - name: Run tests with code coverage
         run: pytest -v --color=yes --cov-report term-missing --cov=amelio_cp --cov-report=xml:coverage.xml tests/shard1
