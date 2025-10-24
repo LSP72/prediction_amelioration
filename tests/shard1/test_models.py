@@ -75,6 +75,3 @@ def test_svc_model():
         np.array([model.model.C, model.model.gamma, model.model.degree]),
         np.array([50, 0.01, 4]),
     )
-
-
-# TODO: model.add_train_data and add_test_data tests w/ fake data and compare
