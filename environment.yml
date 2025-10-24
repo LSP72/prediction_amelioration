@@ -11,4 +11,3 @@ dependencies:
 - skopt
 - shap=0.46.0
 - joblib
-- bayes-opt

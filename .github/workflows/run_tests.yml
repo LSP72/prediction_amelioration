@@ -31,7 +31,6 @@ jobs:
         uses: conda-incubator/setup-miniconda@v3
         with:
           miniforge-version: latest
-          use-mamba: false # added but didn't work
           activate-environment: amelio_cp
           environment-file: environment.yml
 
