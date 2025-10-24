@@ -1,6 +1,4 @@
 from sklearn.svm import SVR
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import StandardScaler
 from scipy.stats import uniform
 from .linear_model import LinearModel
 

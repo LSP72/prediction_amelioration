@@ -1,10 +1,10 @@
 import numpy as np
 import pandas as pd
 
-from amelio_cp.models.linear.linear_model import LinearModel
-from amelio_cp.models.linear.svr_model import SVRModel
-from amelio_cp.models.classification.classifier_model import ClassifierModel
-from amelio_cp.models.classification.svc_model import SVCModel
+from amelio_cp import LinearModel
+from amelio_cp import SVRModel
+from amelio_cp import ClassifierModel
+from amelio_cp import SVCModel
 
 
 data_path = "examples/sandbox/fake_data_for_test.xlsx"
