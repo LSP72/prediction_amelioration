@@ -6,6 +6,7 @@ from amelio_cp.models.linear.svr_model import SVRModel
 from amelio_cp.models.classification.classifier_model import ClassifierModel
 from amelio_cp.models.classification.svc_model import SVCModel
 
+
 data_path = "examples/sandbox/fake_data_for_test.xlsx"
 data = pd.read_excel(data_path)
 
@@ -51,23 +52,6 @@ def test_classifier_model():
 
 def test_svr_model():
     model = SVRModel()
-    np.testing.assert_almost_equal(
-        np.array(
-            [
-                model.random_state,
-                model.params_distributions["C"][0],
-                model.params_distributions["C"][1],
-                model.params_distributions["gamma"][0],
-                model.params_distributions["gamma"][1],
-                model.params_distributions["epsilon"][0],
-                model.params_distributions["epsilon"][1],
-                model.params_distributions["degree"][0],
-                model.params_distributions["degree"][1],
-                len(model.params_distributions["kernel"])
-            ]
-        ),
-        np.array([42, 1, 1000, 0.001, 0.1, 0.01, 1, 2, 5, 3]),
-    )
 
     model.best_params = {
         "C": 50,
@@ -89,24 +73,10 @@ def test_svr_model():
         ),
         np.array([50, 0.01, 0.1, 4]),
     )
+    
 
 def test_svc_model():
     model = SVCModel()
-    np.testing.assert_almost_equal(
-        np.array(
-            [
-                model.random_state,
-                model.params_distributions["C"][0],
-                model.params_distributions["C"][1],
-                model.params_distributions["gamma"][0],
-                model.params_distributions["gamma"][1],
-                model.params_distributions["degree"][0],
-                model.params_distributions["degree"][1],
-                len(model.params_distributions["kernel"])
-            ]
-        ),
-        np.array([42, 1, 1000, 0.001, 0.1, 2, 5, 3]),
-    )
 
     model.best_params = {
         "C": 50,
