@@ -7,8 +7,8 @@ from amelio_cp import ClassifierModel
 from amelio_cp import SVCModel
 
 
-data_path = "examples/sandbox/fake_data_for_test.xlsx"
-data = pd.read_excel(data_path)
+data_path = "examples/sandbox/fake_data_for_test.csv"
+data = pd.read_csv(data_path)
 
 
 def test_linear_model():
@@ -75,3 +75,6 @@ def test_svc_model():
         np.array([model.model.C, model.model.gamma, model.model.degree]),
         np.array([50, 0.01, 4]),
     )
+
+
+# TODO: model.add_train_data and add_test_data tests w/ fake data and compare
