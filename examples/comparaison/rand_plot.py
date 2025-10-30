@@ -2,8 +2,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pickle as pkl
 
-svc_pkl_path = "examples/results/svc_vs_svr_rdm_state/svc.pkl"
-svr_pkl_path = "examples/results/svc_vs_svr_rdm_state/svr.pkl"
+svc_pkl_path = "examples/results/svc_vs_svr_rdm_state/svc_6MWT.pkl"
+svr_pkl_path = "examples/results/svc_vs_svr_rdm_state/svr_6MWT.pkl"
 
 with open(svc_pkl_path, "rb") as file:
     svc_dict = pkl.load(file)
@@ -19,6 +19,7 @@ idx = np.argsort(seeds, kind="stable")  # indices that sort a ascending
 seeds_sorted = np.array(seeds)[idx]
 svc_acc_sorted = np.array(svc_acc)[idx]
 svr_acc_sorted = np.array(svr_acc)[idx]
+avg_diff = np.mean(svc_acc_sorted - svr_acc_sorted)
 
 x = np.linspace(0, len(seeds), len(seeds), endpoint=False)
 plt.scatter(x, svc_acc_sorted, label="svc", color="r")
@@ -29,8 +30,9 @@ for i in range(len(x)):
     y_mid = (svc_acc_sorted[i] + svr_acc_sorted[i]) / 2
     plt.text(x[i] + 0.1, y_mid, f"{diff:.2f}", fontsize=7, color="gray")
 plt.xlabel("Seeds")
-plt.xticks(x, seeds_sorted, rotation=90)
+plt.xticks(x, seeds_sorted, rotation=45)
 plt.ylabel("Precision scores (%)")
-plt.title("Precision scores vs. seeds \n Speed predictions")
+plt.title("Precision scores vs. seeds \n 6MWT predictions")
+plt.text(5, 45, f"Mean difference:\n {avg_diff:.2f}", fontsize=8)
 plt.legend()
 plt.show()

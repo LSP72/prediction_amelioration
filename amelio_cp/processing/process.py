@@ -143,3 +143,35 @@ class Process:
 
         else:
             raise ValueError("Variable not recognized. Use 'VIT', or '6MWT'.")
+
+    @staticmethod
+    # TODO: what the best? -> giving paths or dataframes?
+    # TODO: splitting in several functions for each condition
+    def prepare_data(data_path, features_path, condition_to_predict, model_name):
+        all_data = Process.load_csv(data_path)
+        if condition_to_predict == "VIT":
+            all_data = all_data.drop(["6MWT_POST"], axis=1)
+            all_data = all_data.dropna()
+            if model_name == "svc":
+                y = Process.calculate_MCID(all_data["VIT_PRE"], all_data["VIT_POST"], "VIT")
+            else:
+                y = all_data["VIT_POST"]
+
+        elif condition_to_predict == "6MWT":
+            all_data = all_data.drop(["VIT_POST"], axis=1)
+            all_data = all_data.dropna()
+            if model_name == "svc":
+                y = Process.calculate_MCID(all_data["6MWT_PRE"], all_data["6MWT_POST"], "6MWT", all_data["GMFCS"])
+            else:
+                y = all_data["6MWT_POST"]
+
+        else:
+            raise ValueError("Condition to predict not recognized. Choose either 'VIT' or '6MWT'.")
+
+        features = pd.read_excel(features_path)
+        selected_features = features["19"].dropna().to_list()
+        features_names = features["19_names"].dropna().to_list()
+
+        X = all_data[selected_features]
+
+        return X, y, features_names
