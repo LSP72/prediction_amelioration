@@ -119,47 +119,47 @@ class OptimisationMethods:
             scoring=model.primary_scoring,
             cv=cv_splitter,
             random_state=model.random_state,
-            n_jobs=-1,
+            n_jobs=1,
             verbose=1,
         )
 
         return search
 
+    #TODO: being able to change the n_iter before
     @staticmethod
-    def bayesian_optim(model, X, y):
-        np.random.seed(model.random_state)
-        random.seed(model.random_state)
+    def bayesian_optim(model, n_iter):
+        # np.random.seed(model.model.random_state)
+        # random.seed(model.model.random_state)
 
         # TODO: rearrangeing this function to use correctly the _get_pbounds function
         pbounds = {
             "C": (1, 1000),
             "gamma": (0.001, 1),
             "degree": (2, 5),
-            "kernel": (0, 2),  # 0: 'linear', 1: 'poly', 2: 'rbf'
+            # "kernel": (0, 2),  # 0: 'linear', 1: 'poly', 2: 'rbf'
         }
         kernel_options = ["linear", "poly", "rbf"]
 
-        def function_to_min(C, gamma, degree, kernel):
+        def function_to_min(C, gamma, degree):
             """
             This function updates the model with the given hyperparameters,
             performs cross-validation, and returns the mean accuracy (to be maximized).
             """
 
-            params = {"C": C, "gamma": gamma, "degree": int(degree), "kernel": kernel_options[int(kernel)]}
-            # model_to_optim = model.set_params(**params)
-            model_to_optim = svm.SVC(C=C, gamma=gamma, degree=int(degree), kernel=kernel_options[int(kernel)])
+            params = {"C": C, "gamma": gamma, "degree": int(degree), "kernel": 'rbf'}
+            model_to_optim = model.model.set_params(**params)
             cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=model.random_state)
-            scores = cross_val_score(model_to_optim, X, y, cv=cv, scoring="accuracy", n_jobs=-1)
+            scores = cross_val_score(model_to_optim, model.X_train, model.y_train, cv=cv, scoring="accuracy", n_jobs=-1)
             return scores.mean()
 
         print("⚙️ Starting Bayesian optimisation...")
 
         optimizer = BayesianOptimization(f=function_to_min, pbounds=pbounds, random_state=model.random_state, verbose=3)
-        optimizer.maximize(init_points=10, n_iter=100)
+        optimizer.maximize(init_points=10, n_iter=n_iter)
         best_params = optimizer.max["params"]
         best_params["degree"] = int(best_params["degree"])  # Convert to int
         best_params["C"] = float(best_params["C"])  # Convert to float
-        best_params["kernel"] = kernel_options[int(best_params["kernel"])]  # Map back to string
+        best_params["kernel"] = 'rbf'
 
         final_params = {
             "C": float(best_params["C"]),
@@ -168,8 +168,8 @@ class OptimisationMethods:
             "kernel": best_params["kernel"],
         }
 
-        best_model = model.set_params(**final_params)
-        best_model.fit(X, y)
+        best_model = model.model.set_params(**final_params)
+        best_model.fit(model.X_train, model.y_train)
 
         class ResultWrapper:
             def __init__(self, model, params):
