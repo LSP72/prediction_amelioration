@@ -1,5 +1,4 @@
 import numpy as np
-import pandas as pd
 
 from amelio_cp import LinearModel
 from amelio_cp import SVRModel
@@ -183,6 +182,8 @@ def test_svr_model():
             ]
         ),
     )
+
+    #TODO: X_test_scaled[i]
 
 
 def test_svc_model():

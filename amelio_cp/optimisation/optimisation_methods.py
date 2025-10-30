@@ -3,6 +3,9 @@ from skopt import BayesSearchCV
 from bayes_opt import BayesianOptimization
 from skopt.space import Real, Integer, Categorical
 from scipy.stats import uniform, randint
+import numpy as np
+import random
+from sklearn import svm
 
 
 # TODO: find a way to collect training accuracies
@@ -65,6 +68,7 @@ class OptimisationMethods:
 
         return pbounds
 
+    #TODO: create _get_pbounds_for_xxx : rf / lin models
     @staticmethod
     def _get_pbounds_for_rf(model_name: str, optim_method: str, params_distrib: dict):
         if optim_method == "random" or optim_method == "bayesian_search" or optim_method == "bayesian_optim":
@@ -74,49 +78,47 @@ class OptimisationMethods:
         return None
 
     # %% Optimisation functions
-    @staticmethod
     def random_search(self, model, n_iter, k_folds):
 
         if model.name == "svc" or model.name == "svr":
-            pbounds = self._get_pbounds_for_svm(model.name, "random", model.params_distrib)
+            pbounds = self._get_pbounds_for_svm(model.name, "random", model.params_distributions)
         else:
             raise NotImplementedError("Random search not implemented for this model.")
 
         print("⚙️ Starting RandomizedSearchCV optimisation...")
 
-        cv_splitter = KFold(n_splits=k_folds, shuffle=True, random_state=42)
+        cv_splitter = KFold(n_splits=k_folds, shuffle=True, random_state=model.random_state)
 
         search = RandomizedSearchCV(
-            model,
+            estimator=model.model,
             param_distributions=pbounds,
             n_iter=n_iter,
             scoring=model.primary_scoring,
             cv=cv_splitter,
-            random_state=42,
+            random_state=model.random_state,
             verbose=1,
             n_jobs=-1,
         )
 
         return search
 
-    @staticmethod
     def bayesian_search(self, model, n_iter, k_folds):
         print("⚙️ Starting Bayesian Search Optimization...")
 
         if model.name == "svc" or model.name == "svr":
-            pbounds = self._get_pbounds_for_bayesian_search(model.name, "bayesian", model.params_distrib)
+            pbounds = self._get_pbounds_for_svm(model.name, "bayesian_search", model.params_distributions)
         else:
             raise NotImplementedError("Bayesian search not implemented for this model.")
 
-        cv_splitter = KFold(n_splits=k_folds, shuffle=True, random_state=42)
+        cv_splitter = KFold(n_splits=k_folds, shuffle=True, random_state=model.random_state)
 
         search = BayesSearchCV(
-            model,
+            estimator=model.model,
             search_spaces=pbounds,
             n_iter=n_iter,
             scoring=model.primary_scoring,
             cv=cv_splitter,
-            random_state=42,
+            random_state=model.random_state,
             n_jobs=-1,
             verbose=1,
         )
@@ -125,6 +127,8 @@ class OptimisationMethods:
 
     @staticmethod
     def bayesian_optim(model, X, y):
+        np.random.seed(model.random_state)
+        random.seed(model.random_state)
 
         # TODO: rearrangeing this function to use correctly the _get_pbounds function
         pbounds = {
@@ -142,14 +146,15 @@ class OptimisationMethods:
             """
 
             params = {"C": C, "gamma": gamma, "degree": int(degree), "kernel": kernel_options[int(kernel)]}
-            model_to_optim = model.set_params(**params)
-            cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
-            scores = cross_val_score(model_to_optim, X, y, cv=cv, scoring="accuracy")
+            # model_to_optim = model.set_params(**params)
+            model_to_optim = svm.SVC(C=C, gamma=gamma, degree=int(degree), kernel=kernel_options[int(kernel)])
+            cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=model.random_state)
+            scores = cross_val_score(model_to_optim, X, y, cv=cv, scoring="accuracy", n_jobs=-1)
             return scores.mean()
 
         print("⚙️ Starting Bayesian optimisation...")
 
-        optimizer = BayesianOptimization(f=function_to_min, pbounds=pbounds, random_state=42, verbose=3)
+        optimizer = BayesianOptimization(f=function_to_min, pbounds=pbounds, random_state=model.random_state, verbose=3)
         optimizer.maximize(init_points=10, n_iter=100)
         best_params = optimizer.max["params"]
         best_params["degree"] = int(best_params["degree"])  # Convert to int

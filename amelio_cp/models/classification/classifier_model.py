@@ -135,16 +135,15 @@ class ClassifierModel:
 
         # Creating the optimisation loop
         if method == "random":
-            search = OptimisationMethods.random_search(
-                self.model, n_iter, k_folds=5, primary_scoring=self.primary_scoring
+            search = OptimisationMethods().random_search(
+                model=self, n_iter=n_iter, k_folds=5
             )
             search.fit(self.X_train_scaled, self.y_train)  # training
             print("Random search optimisation completed.")
 
-        elif method == "bayesian":
-            search = OptimisationMethods.bayesian_search(
-                self.model, n_iter, k_folds=5, primary_scoring=self.primary_scoring
-            )
+        elif method == "bayesian_search":
+            search = OptimisationMethods().bayesian_search(
+                model=self, n_iter=n_iter, k_folds=5)
             search.fit(self.X_train_scaled, self.y_train)  # training
             print("Bayesian Search optimisation completed.")
 
