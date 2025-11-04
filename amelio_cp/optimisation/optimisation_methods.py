@@ -149,7 +149,7 @@ class OptimisationMethods:
             params = {"C": C, "gamma": gamma, "degree": int(degree), "kernel": 'rbf'}
             model_to_optim = model.model.set_params(**params)
             cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=model.random_state)
-            scores = cross_val_score(model_to_optim, model.X_train, model.y_train, cv=cv, scoring="accuracy", n_jobs=-1)
+            scores = cross_val_score(model_to_optim, model.X_train_scaled, model.y_train, cv=cv, scoring="accuracy", n_jobs=-1)
             return scores.mean()
 
         print("⚙️ Starting Bayesian optimisation...")
@@ -169,7 +169,7 @@ class OptimisationMethods:
         }
 
         best_model = model.model.set_params(**final_params)
-        best_model.fit(model.X_train, model.y_train)
+        best_model.fit(model.X_train_scaled, model.y_train)
 
         class ResultWrapper:
             def __init__(self, model, params):
