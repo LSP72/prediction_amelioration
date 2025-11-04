@@ -36,7 +36,6 @@ def prepare_data(data_path, features_path, condition_to_predict, model_name, sam
 
     features = pd.read_excel(features_path)
     selected_features = features["19"].dropna().to_list()
-    features_names = features["19_names"].dropna().to_list()
 
     X = all_data[selected_features]
 
@@ -48,7 +47,7 @@ def prepare_data(data_path, features_path, condition_to_predict, model_name, sam
         missing = [i for i in samples_to_keep if i not in X.index]
         raise ValueError(f"Some chosen labels are missing:{missing}")
 
-    return X, y, X_ex, y_ex, features_names
+    return X, y, X_ex, y_ex
 
 
 def load_data(model, X, y, X_ex, y_ex):
@@ -74,10 +73,10 @@ def main(condition_to_predict, samples_to_keep):
         starting_time = time.time()
 
         model = build_model(model_name)
-        X, y, X_ex, y_ex, features_names = prepare_data(data_path, features_path, condition_to_predict, model_name, samples_to_keep)
+        X, y, X_ex, y_ex = prepare_data(data_path, features_path, condition_to_predict, model_name, samples_to_keep)
         load_data(model, X, y, X_ex, y_ex)
 
-        model.train_and_tune("bayesian_optim", n_iter=20)
+        model.train_and_tune("bayesian_optim")
 
         y_pred = model.model.predict(model.X_test_scaled)
 
@@ -89,7 +88,9 @@ def main(condition_to_predict, samples_to_keep):
             "degree": model.best_params["degree"],
             "kernel": model.best_params["kernel"],
             "prediction": y_pred,
-            "optim_time": optim_time
+            "optim_time": optim_time,
+            "samples_kept": samples_to_keep
+            "GMFCS_levels": X_ex['GMFCS']
             }
 
     save_data(results_dict, condition_to_predict, output_path)
