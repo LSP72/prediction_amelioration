@@ -89,9 +89,13 @@ def main(condition_to_predict, samples_to_keep):
             "kernel": model.best_params["kernel"],
             "prediction": y_pred,
             "optim_time": optim_time,
-            "samples_kept": samples_to_keep
+            "samples_kept": samples_to_keep,
             "GMFCS_levels": X_ex['GMFCS']
             }
+        
+        if model_name == 'svr':
+            diff = y_pred - y_ex
+            results_dict[model_name]["pre_post_diff"] = diff
 
     save_data(results_dict, condition_to_predict, output_path)
 
