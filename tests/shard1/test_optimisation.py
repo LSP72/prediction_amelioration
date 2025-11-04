@@ -20,13 +20,13 @@ def test_optimisation_svc_model():
     y_pred = model.model.predict(model.X_test_scaled)
 
     np.testing.assert_equal(
-        np.array([ model.model.gamma, model.model.degree]),
-        np.array([ 0.001, 3])
+        np.array([model.model.C, float(model.model.gamma), model.model.degree]),
+        np.array([169.63021952277953, 0.10992366904399258, 3])
         )
     
     np.testing.assert_equal(
         np.array(y_pred),
-        np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+        np.array([1, 0, 0, 1, 1, 1, 1, 0, 1, 0, 0, 0, 0, 1, 1, 0, 1, 0, 1, 0, 1])
         )
 
     model.train_and_tune("bayesian_search", n_iter=10)
@@ -34,6 +34,7 @@ def test_optimisation_svc_model():
         np.array([model.model.C, model.model.gamma, model.model.degree]),
         np.array([410.6938548944605, 0.09335393188593556, 4])
         )
+    y_pred = model.model.predict(model.X_test_scaled)
     
     np.testing.assert_equal(
         np.array(y_pred),
