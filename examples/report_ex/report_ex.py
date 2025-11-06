@@ -51,7 +51,7 @@ def prepare_data(data_path, features_path, condition_to_predict, model_name, sam
 
 
 def load_data(model, X, y, X_ex, y_ex):
-    model.add_train_data(X, y) # not going to evaluate the model, so using all the data for training
+    model.add_train_data(X, y)  # not going to evaluate the model, so using all the data for training
     model.add_test_data(X_ex, y_ex)
 
 
@@ -67,7 +67,7 @@ def main(condition_to_predict, samples_to_keep):
     features_path = "amelio_cp/processing/Features.xlsx"
     output_path = "examples/results/report_ex/"
     output_path_shap = output_path + "shap_fig/"
-    models = ['svc', 'svr']
+    models = ["svc", "svr"]
 
     for model_name in models:
         starting_time = time.time()
@@ -90,17 +90,17 @@ def main(condition_to_predict, samples_to_keep):
             "prediction": y_pred,
             "optim_time": optim_time,
             "samples_kept": samples_to_keep,
-            "GMFCS_levels": X_ex['GMFCS']
-            }
-        
-        if model_name == 'svr':
-            diff = y_pred - X_ex[condition_to_predict+'_PRE']
+            "GMFCS_levels": X_ex["GMFCS"],
+        }
+
+        if model_name == "svr":
+            diff = y_pred - X_ex[condition_to_predict + "_PRE"]
             results_dict[model_name]["pre_post_diff"] = diff
 
     save_data(results_dict, condition_to_predict, output_path)
 
 
 if __name__ == "__main__":
-    samples_to_keep = [20, 44] # will remove the data 20 [0 but neg] and 44 [1]
+    samples_to_keep = [20, 44]  # will remove the data 20 [0 but neg] and 44 [1]
     # main("VIT", samples_to_keep)
     main("6MWT", samples_to_keep)

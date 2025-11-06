@@ -68,7 +68,7 @@ class OptimisationMethods:
 
         return pbounds
 
-    #TODO: create _get_pbounds_for_xxx : rf / lin models
+    # TODO: create _get_pbounds_for_xxx : rf / lin models
     @staticmethod
     def _get_pbounds_for_rf(model_name: str, optim_method: str, params_distrib: dict):
         if optim_method == "random" or optim_method == "bayesian_search" or optim_method == "bayesian_optim":
@@ -125,7 +125,7 @@ class OptimisationMethods:
 
         return search
 
-    #TODO: being able to change the n_iter before
+    # TODO: being able to change the n_iter before
     @staticmethod
     def bayesian_optim(model, n_iter):
         # np.random.seed(model.model.random_state)
@@ -146,10 +146,12 @@ class OptimisationMethods:
             performs cross-validation, and returns the mean accuracy (to be maximized).
             """
 
-            params = {"C": C, "gamma": gamma, "degree": int(degree), "kernel": 'rbf'}
+            params = {"C": C, "gamma": gamma, "degree": int(degree), "kernel": "rbf"}
             model_to_optim = model.model.set_params(**params)
             cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=model.random_state)
-            scores = cross_val_score(model_to_optim, model.X_train_scaled, model.y_train, cv=cv, scoring="accuracy", n_jobs=-1)
+            scores = cross_val_score(
+                model_to_optim, model.X_train_scaled, model.y_train, cv=cv, scoring="accuracy", n_jobs=-1
+            )
             return scores.mean()
 
         print("⚙️ Starting Bayesian optimisation...")
@@ -159,7 +161,7 @@ class OptimisationMethods:
         best_params = optimizer.max["params"]
         best_params["degree"] = int(best_params["degree"])  # Convert to int
         best_params["C"] = float(best_params["C"])  # Convert to float
-        best_params["kernel"] = 'rbf'
+        best_params["kernel"] = "rbf"
 
         final_params = {
             "C": float(best_params["C"]),

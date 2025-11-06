@@ -183,7 +183,7 @@ def test_svr_model():
         ),
     )
 
-    #TODO: X_test_scaled[i]
+    # TODO: X_test_scaled[i]
 
 
 def test_svc_model():
