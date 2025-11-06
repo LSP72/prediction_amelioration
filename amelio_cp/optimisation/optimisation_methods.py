@@ -87,7 +87,7 @@ class OptimisationMethods:
 
         print("⚙️ Starting RandomizedSearchCV optimisation...")
 
-        cv_splitter = KFold(n_splits=k_folds, shuffle=True, random_state=model.random_state)
+        cv_splitter = KFold(n_splits=k_folds, shuffle=True, random_state=model.random_state_cv)
 
         search = RandomizedSearchCV(
             estimator=model.model,
@@ -95,7 +95,7 @@ class OptimisationMethods:
             n_iter=n_iter,
             scoring=model.primary_scoring,
             cv=cv_splitter,
-            random_state=model.random_state,
+            random_state=model.random_state_optim,
             verbose=1,
             n_jobs=-1,
         )
@@ -110,7 +110,7 @@ class OptimisationMethods:
         else:
             raise NotImplementedError("Bayesian search not implemented for this model.")
 
-        cv_splitter = KFold(n_splits=k_folds, shuffle=True, random_state=model.random_state)
+        cv_splitter = KFold(n_splits=k_folds, shuffle=True, random_state=model.random_state_cv)
 
         search = BayesSearchCV(
             estimator=model.model,
@@ -118,7 +118,7 @@ class OptimisationMethods:
             n_iter=n_iter,
             scoring=model.primary_scoring,
             cv=cv_splitter,
-            random_state=model.random_state,
+            random_state=model.random_state_optim,
             n_jobs=1,
             verbose=1,
         )
@@ -128,8 +128,6 @@ class OptimisationMethods:
     # TODO: being able to change the n_iter before
     @staticmethod
     def bayesian_optim(model, n_iter):
-        # np.random.seed(model.model.random_state)
-        # random.seed(model.model.random_state)
 
         # TODO: rearrangeing this function to use correctly the _get_pbounds function
         pbounds = {
@@ -148,7 +146,7 @@ class OptimisationMethods:
 
             params = {"C": C, "gamma": gamma, "degree": int(degree), "kernel": "rbf"}
             model_to_optim = model.model.set_params(**params)
-            cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=model.random_state)
+            cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=model.random_state_cv)
             scores = cross_val_score(
                 model_to_optim, model.X_train_scaled, model.y_train, cv=cv, scoring="accuracy", n_jobs=-1
             )
@@ -156,7 +154,7 @@ class OptimisationMethods:
 
         print("⚙️ Starting Bayesian optimisation...")
 
-        optimizer = BayesianOptimization(f=function_to_min, pbounds=pbounds, random_state=model.random_state, verbose=3)
+        optimizer = BayesianOptimization(f=function_to_min, pbounds=pbounds, random_state=model.random_state_optim, verbose=3)
         optimizer.maximize(init_points=10, n_iter=n_iter)
         best_params = optimizer.max["params"]
         best_params["degree"] = int(best_params["degree"])  # Convert to int

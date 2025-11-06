@@ -35,6 +35,9 @@ class ClassifierModel:
         )
         self.shap_analysis = None  # stores the shap analysis objects, if needed
         self.random_state = 42  # setting a default rdm state
+        self.random_state_split = self.random_state # sets a random state for data split
+        self.random_state_optim = self.random_state # sets a random state for the optimisation
+        self.random_state_cv = self.random_state # sets a random state for the CV
         self.optim_method = None
 
     # Specific function to add the training data
@@ -52,7 +55,7 @@ class ClassifierModel:
     # Function that splits and adds datasets
     def add_data(self, X, y, test_size):
         x_train, x_test, y_train, y_test = train_test_split(
-            X, y, test_size=test_size, stratify=y, random_state=self.random_state
+            X, y, test_size=test_size, stratify=y, random_state=self.random_state_split
         )
         print("✅ Split has been done.", flush=True)
         self.add_train_data(x_train, y_train)
@@ -71,61 +74,6 @@ class ClassifierModel:
             X_model = pd.concat([X_model, X_given], ignore_index=True)
             y_model = pd.concat([y_model, y_given], ignore_index=True)
         return X_model, y_model
-
-    # Function that estimates the perf of the model // NOT USED FOR NOW
-    def perf_estimate(self, n_iter):
-        """Check for the overall perf of the model with nested CV method"""
-
-        if self.X_train is None or self.y_train is None:  # Check if there is some data
-            raise ValueError("No data available for training.")
-        if self.pipeline is None or self.param_distributions is None:
-            raise ValueError("Child class must define pipeline and param_distributions.")
-
-        inner_cv = KFold(n_splits=5, shuffle=True, random_state=42)
-        outer_cv = KFold(n_splits=5, shuffle=True, random_state=72)
-
-        print(f"🔍 Starting hyperparameter search...")
-
-        # Define search space
-        pbounds = self.param_distributions
-
-        # Create a pipeline for the model: scaling + SVR - everydata will pas through that order
-        pipeline = self.pipeline
-
-        # Creating the optimisation loop
-        search = RandomizedSearchCV(
-            pipeline,
-            param_distributions=pbounds,
-            n_iter=n_iter,
-            scoring=self.primary_scoring,  # doesnt exist anymore, but function kept
-            cv=inner_cv,
-            random_state=self.random_state,
-            verbose=2,
-            n_jobs=-1,
-        )
-
-        cv_prim = cross_val_score(search, self.X_train, self.y_train, cv=outer_cv, scoring=self.primary_scoring)
-        print(f"📊 CV {self.primary_scoring}: {cv_prim.mean():.4f} ± {cv_prim.std():.4f}")
-
-        results = {
-            "CV {self.primary_scoring} scores": cv_prim.tolist(),  # doesnt exist anymore, but function kept
-            "CV {self.primary_scoring} mean": float(cv_prim.mean()),  # doesnt exist anymore, but function kept
-            "CV {self.primary_scoring} std": float(cv_prim.std()),  # doesnt exist anymore, but function kept
-        }
-
-        if self.secondary_scoring is not None:
-            cv_sec = cross_val_score(search, self.X_train, self.y_train, cv=outer_cv, scoring=self.secondary_scoring)
-            print(f"📊 CV {self.secondary_scoring}: {cv_sec.mean():.4f} ± {cv_sec.std():.4f}")
-
-        results.update(
-            {
-                "CV {self.secondary_scoring} scores": cv_sec.tolist(),
-                "CV {self.secondary_scoring} mean": float(cv_sec.mean()),
-                "CV {self.secondary_scoring} std": float(cv_sec.std()),
-            }
-        )
-
-        return results
 
     # Function that optimises and trains the model
     def train_and_tune(self, method: str, n_iter=100):

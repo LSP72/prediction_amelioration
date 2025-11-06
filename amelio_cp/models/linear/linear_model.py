@@ -36,7 +36,10 @@ class LinearModel:
             None  # stores the best parameters, and updates it everytime the addition of a sample allows better results
         )
         self.shap_analysis = None  # stores the shap analysis objects, if needed
-        self.random_state = 42  # setting a default rdm state
+        self.random_state = 42  # sets a default random state
+        self.random_state_split = self.random_state # sets a random state for data split
+        self.random_state_optim = self.random_state # sets a random state for the optimisation   
+        self.random_state_cv = self.random_state # sets a random state for the CV
         self.optim_method = None
 
     # Specific function to add the training data
@@ -53,7 +56,7 @@ class LinearModel:
 
     # Function that splits and adds datasets
     def add_data(self, X, y, test_size):
-        x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=self.random_state)
+        x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=self.random_state_split)
         print("✅ Split has been done.", flush=True)
         self.add_train_data(x_train, y_train)
         self.add_test_data(x_test, y_test)
@@ -71,55 +74,6 @@ class LinearModel:
             X_model = pd.concat([X_model, X_given], ignore_index=True)
             y_model = pd.concat([y_model, y_given], ignore_index=True)
         return X_model, y_model
-
-    def perf_estimate(self, n_iter):
-        """Check for the overall perf of the model with nested CV method"""
-
-        if self.X_train is None or self.y_train is None:  # Check if there is some data
-            raise ValueError("No data available for training.")
-
-        inner_cv = KFold(n_splits=5, shuffle=True, random_state=42)
-        outer_cv = KFold(n_splits=5, shuffle=True, random_state=72)
-
-        print(f"🔍 Starting hyperparameter search...")
-
-        # Define search space
-        pbounds = {
-            "svr__C": uniform(1, 500),
-            "svr__epsilon": uniform(0.01, 1),
-            "svr__kernel": ["linear", "poly", "rbf"],
-            "svr__gamma": ["scale", "auto"],  # "scale" = 1/(n_features * X.var())
-            # "auto" = 1/n_features
-        }
-
-        # Create a pipeline for the model: scaling + SVR - every data will pas through that order
-        pipeline_svr = Pipeline([("scaler", StandardScaler()), ("svr", SVR())])
-
-        # Creating the optimisation loop
-        search = RandomizedSearchCV(
-            pipeline_svr,
-            param_distributions=pbounds,
-            n_iter=n_iter,
-            scoring="neg_mean_squared_error",  # will try to maximise r2
-            cv=inner_cv,
-            random_state=self.random_state,
-            verbose=2,
-            n_jobs=1,
-        )
-
-        cv_r2 = cross_val_score(search, self.X_train, self.y_train, cv=outer_cv, scoring="r2")
-        cv_rmse = np.sqrt(
-            -cross_val_score(search, self.X_train, self.y_train, cv=outer_cv, scoring="neg_mean_squared_error")
-        )
-        print(f"📊 CV R²: {cv_r2.mean():.4f} ± {cv_r2.std():.4f}")
-        print(f"📊 CV RMSE: {cv_rmse.mean():.4f} ± {cv_rmse.std():.4f}")
-
-        return {
-            "CV R² mean": cv_r2.mean(),
-            "CV R² std": cv_r2.std(),
-            "CV RMSE mean": cv_rmse.mean(),
-            "CV RMSE std": cv_rmse.std(),
-        }
 
     def train_and_tune(self, method: str, n_iter=100):
         """Tune hyperparameters"""
