@@ -80,14 +80,14 @@ def main(seed_list, condition_to_predict):
         X, y, features = prepare_data(data_path, features_path, condition_to_predict)
         load_data(X, y, model)
 
-        model.train_and_tune("bayesian_optim", n_iter=20)
+        model.train_and_tune("bayesian_optim", n_iter=100)
         optim_time = time.time() - starting_time
         y_pred = model.model.predict(model.X_test_scaled)
 
         r2 = r2_score(model.y_test, y_pred)
 
         model.shap_analysis = SHAPPlots.shap_values_calculation(model_class=model)
-        SHAPPlots.plot_shap_summary(model, features, output_path_shap)
+        SHAPPlots.plot_shap_summary(model, features, output_path_shap, show=False)
 
         results_dict = append_data(results_dict, model, seed, optim_time, r2, model.y_test, y_pred)
 

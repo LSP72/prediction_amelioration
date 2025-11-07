@@ -16,7 +16,7 @@ def get_param(dict, param:str):
 
 vit_r2 = get_param(vit_dict, "r2")
 endurance_r2 = get_param(endurance_dict, "r2")
-seeds = get_param(vit_dict, "seed") # random_state now
+seeds = get_param(vit_dict, "random_state")
 
 vit_mean = np.average(vit_r2)
 endurance_mean = np.average(endurance_r2)
@@ -33,7 +33,7 @@ plt.scatter(x_index, endurance_r2_sorted, label="6mwt", color='red')
 plt.xticks(x_index, seeds_sorted)
 plt.xlabel("seeds")
 plt.ylabel("r2")
-plt.text(3, -0.8, f"Speed mean: {vit_mean:.3f}")
-plt.text(3, -1, f"6mwt mean: {endurance_mean:.3f}")
+plt.text(2, 0.43, f"Speed mean: {vit_mean:.3f}")
+plt.text(2, 0.4, f"6mwt mean: {endurance_mean:.3f}")
 plt.legend()
 plt.show()
