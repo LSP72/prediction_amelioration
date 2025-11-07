@@ -95,7 +95,7 @@ class LinearModel:
             print("Bayesian Search optimisation completed.")
 
         elif method == "bayesian_optim":
-            search = OptimisationMethodsLin.bayesian_optim(self.model, self.X_train_scaled, self.y_train)
+            search = OptimisationMethodsLin.bayesian_optim(self, n_iter=n_iter)
             print("Bayesian optimisation completed.")
 
         else:
