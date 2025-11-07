@@ -29,6 +29,7 @@ class OptimisationMethodsLin(OptimisationMethods):
             }
             try_model = model.set_params(**params)
             cv = KFold(n_splits=5, shuffle=True, random_state=42)
+            #TODO: change scoring with the scoring value from the model
             scores = cross_val_score(try_model, X, y, cv=cv, scoring="neg_mean_squared_error")
             return scores.mean()
 

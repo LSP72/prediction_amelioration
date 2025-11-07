@@ -40,7 +40,10 @@ def load_data(X, y, model, test_size=0.2):
 def append_data(results_dict, model, id, time, r2, y_true, y_pred):
     results_dict["id_" + str(id)] = {
         "optim_method": model.optim_method,
-        "seed": model.random_state,
+        "random_state": model.random_state,
+        "random_state_split": model.random_state_split,
+        "random_state_cv": model.random_state_cv,
+        "random_state_optim": model.random_state_optim,
         "C": model.best_params["C"],
         "gamma": model.best_params["gamma"],
         "degree": model.best_params["degree"],
@@ -49,7 +52,9 @@ def append_data(results_dict, model, id, time, r2, y_true, y_pred):
         "r2": r2,
         "optim_time": time,
         "y_true": y_true,
-        "y_pred": y_pred
+        "y_pred": y_pred,
+        "shap_values": model.shap_analysis["shap_values"]
+
     }
 
     return results_dict
