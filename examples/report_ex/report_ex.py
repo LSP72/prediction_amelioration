@@ -9,10 +9,11 @@ import time
 def build_model(model_name):
     if model_name == "svc":
         model = SVCModel()
+        model.random_state = 1
 
     elif model_name == "svr":
         model = SVRModel()
-        pass
+        model.random_state = 1
     return model
 
 
@@ -66,7 +67,6 @@ def main(condition_to_predict, samples_to_keep):
     data_path = "datasets/sample_2/all_data_28pp.csv"
     features_path = "amelio_cp/processing/Features.xlsx"
     output_path = "examples/results/report_ex/"
-    output_path_shap = output_path + "shap_fig/"
     models = ["svc", "svr"]
 
     for model_name in models:
@@ -102,5 +102,5 @@ def main(condition_to_predict, samples_to_keep):
 
 if __name__ == "__main__":
     samples_to_keep = [20, 44]  # will remove the data 20 [0 but neg] and 44 [1]
-    # main("VIT", samples_to_keep)
+    main("VIT", samples_to_keep)
     main("6MWT", samples_to_keep)
