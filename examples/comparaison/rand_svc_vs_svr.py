@@ -60,7 +60,7 @@ def append_data(results_dict, model, id, time, precision_score, conf_matrix, y_t
     results_dict["id_" + str(id)] = {
         "model_name": model.name,
         "optim_method": model.optim_method,
-        "seed": model.random_state,
+        "seed": s,
         "C": model.best_params["C"],
         "gamma": model.best_params["gamma"],
         "degree": model.best_params["degree"],
