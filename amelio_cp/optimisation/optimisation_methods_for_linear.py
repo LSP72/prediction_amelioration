@@ -29,12 +29,16 @@ class OptimisationMethodsLin(OptimisationMethods):
             }
             try_model = model.model.set_params(**params)
             cv = KFold(n_splits=5, shuffle=True, random_state=model.random_state_cv)
-            scores = cross_val_score(try_model, model.X_train_scaled, model.y_train, cv=cv, scoring="neg_mean_squared_error", n_jobs=-1)
+            scores = cross_val_score(
+                try_model, model.X_train_scaled, model.y_train, cv=cv, scoring="neg_mean_squared_error", n_jobs=-1
+            )
             return scores.mean()
 
         print("⚙️ Starting Bayesian optimisation...")
 
-        optimizer = BayesianOptimization(f=function_to_min, pbounds=pbounds, random_state=model.random_state_optim, verbose=3)
+        optimizer = BayesianOptimization(
+            f=function_to_min, pbounds=pbounds, random_state=model.random_state_optim, verbose=3
+        )
         optimizer.maximize(init_points=10, n_iter=n_iter)
         best_params = optimizer.max["params"]
         best_params["degree"] = int(best_params["degree"])  # Convert to int

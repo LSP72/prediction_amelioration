@@ -35,9 +35,9 @@ class ClassifierModel:
         )
         self.shap_analysis = None  # stores the shap analysis objects, if needed
         self.random_state = 42  # setting a default rdm state
-        self.random_state_split = self.random_state # sets a random state for data split
-        self.random_state_optim = self.random_state # sets a random state for the optimisation
-        self.random_state_cv = self.random_state # sets a random state for the CV
+        self.random_state_split = self.random_state  # sets a random state for data split
+        self.random_state_optim = self.random_state  # sets a random state for the optimisation
+        self.random_state_cv = self.random_state  # sets a random state for the CV
         self.optim_method = None
 
     # Specific function to add the training data

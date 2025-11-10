@@ -44,7 +44,9 @@ def load_data(X, y, model, test_size=0.2):
     model.add_data(X, y, test_size)
 
 
-def append_data(results_dict, model, id, optim_time, precision_score, precision_score_from_model, conf_matrix, y_true, y_pred):
+def append_data(
+    results_dict, model, id, optim_time, precision_score, precision_score_from_model, conf_matrix, y_true, y_pred
+):
     results_dict["id_" + str(id)] = {
         "model_name": model.name,
         "optim_method": model.optim_method,
@@ -68,7 +70,7 @@ def append_data(results_dict, model, id, optim_time, precision_score, precision_
 
 
 def save_data(results_dict, condition_to_predict, randomized_seed_type, output_path):
-    pickle_file_name = output_path + randomized_seed_type + '_' + condition_to_predict + ".pkl"
+    pickle_file_name = output_path + randomized_seed_type + "_" + condition_to_predict + ".pkl"
     with open(pickle_file_name, "wb") as file:
         pkl.dump(results_dict, file)
 
@@ -87,13 +89,14 @@ def main(seeds_dict, condition_to_predict, randomized_seed_type):
         model = build_model(random_state_split, random_state_cv, random_state_optim)
 
         print("************************************")
-        print(f"Running for {condition_to_predict} with: "
-              f"split seed: {model.random_state_split}, ",
-              f"cv seed: {model.random_state_cv}, ", 
-              f"optim seed: {model.random_state_optim}.")
+        print(
+            f"Running for {condition_to_predict} with: " f"split seed: {model.random_state_split}, ",
+            f"cv seed: {model.random_state_cv}, ",
+            f"optim seed: {model.random_state_optim}.",
+        )
 
         starting_time = time.time()
-        
+
         X, y = prepare_data(data_path, features_path, condition_to_predict)
         load_data(X, y, model)
 
@@ -107,7 +110,15 @@ def main(seeds_dict, condition_to_predict, randomized_seed_type):
         precision_score_from_model = model.model.score(model.X_test_scaled, model.y_test)
 
         results_dict = append_data(
-            results_dict, model, i, optim_time, precision_score, precision_score_from_model, conf_matrix, model.y_test, y_pred
+            results_dict,
+            model,
+            i,
+            optim_time,
+            precision_score,
+            precision_score_from_model,
+            conf_matrix,
+            model.y_test,
+            y_pred,
         )
 
     save_data(results_dict, condition_to_predict, randomized_seed_type, output_path)
@@ -115,15 +126,12 @@ def main(seeds_dict, condition_to_predict, randomized_seed_type):
 
 if __name__ == "__main__":
     nb_iter = 10
-    split = [[i for i in range(1, nb_iter+1)], [42]*nb_iter, [42]*nb_iter]
-    cv = [[42]*nb_iter, [i for i in range(1, nb_iter+1)], [42]*nb_iter]
-    optim = [[42]*nb_iter, [42]*nb_iter, [i for i in range(1, nb_iter+1)]]
+    split = [[i for i in range(1, nb_iter + 1)], [42] * nb_iter, [42] * nb_iter]
+    cv = [[42] * nb_iter, [i for i in range(1, nb_iter + 1)], [42] * nb_iter]
+    optim = [[42] * nb_iter, [42] * nb_iter, [i for i in range(1, nb_iter + 1)]]
     randomized_seed_type_list = ["split", "cv", "optim"]
 
     for i in range(len(split)):
-        seeds_dict = {"split": split[i],
-                      "cv": cv[i], 
-                      "optim": optim[i]
-                      }
+        seeds_dict = {"split": split[i], "cv": cv[i], "optim": optim[i]}
         main(seeds_dict, "6MWT", randomized_seed_type_list[i])
         main(seeds_dict, "VIT", randomized_seed_type_list[i])

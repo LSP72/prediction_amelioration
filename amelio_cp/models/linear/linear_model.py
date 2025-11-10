@@ -37,9 +37,9 @@ class LinearModel:
         )
         self.shap_analysis = None  # stores the shap analysis objects, if needed
         self.random_state = 42  # sets a default random state
-        self.random_state_split = self.random_state # sets a random state for data split
-        self.random_state_optim = self.random_state # sets a random state for the optimisation   
-        self.random_state_cv = self.random_state # sets a random state for the CV
+        self.random_state_split = self.random_state  # sets a random state for data split
+        self.random_state_optim = self.random_state  # sets a random state for the optimisation
+        self.random_state_cv = self.random_state  # sets a random state for the CV
         self.optim_method = None
 
     # Specific function to add the training data
@@ -56,7 +56,9 @@ class LinearModel:
 
     # Function that splits and adds datasets
     def add_data(self, X, y, test_size):
-        x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=self.random_state_split)
+        x_train, x_test, y_train, y_test = train_test_split(
+            X, y, test_size=test_size, random_state=self.random_state_split
+        )
         print("✅ Split has been done.", flush=True)
         self.add_train_data(x_train, y_train)
         self.add_test_data(x_test, y_test)

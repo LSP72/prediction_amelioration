@@ -6,26 +6,31 @@ from amelio_cp import SHAPPlots
 from sklearn.metrics import r2_score
 import time
 
+
 def build_model(seed):
     model = SVRModel()
     model.random_state = seed
+    model.random_state_split = model.random_state  # sets a random state for data split
+    model.random_state_optim = model.random_state  # sets a random state for the optimisation
+    model.random_state_cv = model.random_state
     return model
+
 
 def prepare_data(data_path, features_path, condition_to_predict):
     all_data = Process.load_csv(data_path)
     if condition_to_predict == "VIT":
         all_data = all_data.drop(["6MWT_POST"], axis=1)
         all_data = all_data.dropna()
-        y = all_data['VIT_POST']-all_data['VIT_PRE']
+        y = all_data["VIT_POST"] - all_data["VIT_PRE"]
 
     elif condition_to_predict == "6MWT":
         all_data = all_data.drop(["VIT_POST"], axis=1)
         all_data = all_data.dropna()
-        y = all_data["6MWT_POST"]-all_data["6MWT_PRE"]
+        y = all_data["6MWT_POST"] - all_data["6MWT_PRE"]
 
     else:
         raise ValueError("Condition to predict not recognized. Choose either 'VIT' or '6MWT'.")
-    
+
     features = pd.read_excel(features_path)
     selected_features = features["19"].dropna().to_list()
     features_names = features["19_names"].dropna().to_list()
@@ -34,8 +39,10 @@ def prepare_data(data_path, features_path, condition_to_predict):
 
     return X, y, features_names
 
+
 def load_data(X, y, model, test_size=0.2):
     model.add_data(X, y, test_size)
+
 
 def append_data(results_dict, model, id, time, r2, y_true, y_pred):
     results_dict["id_" + str(id)] = {
@@ -53,16 +60,17 @@ def append_data(results_dict, model, id, time, r2, y_true, y_pred):
         "optim_time": time,
         "y_true": y_true,
         "y_pred": y_pred,
-        "shap_values": model.shap_analysis["shap_values"]
-
+        "shap_values": model.shap_analysis["shap_values"],
     }
 
     return results_dict
+
 
 def save_data(results_dict, model_name, condition_to_predict, output_path):
     pickle_file_name = output_path + model_name + "_" + condition_to_predict + "_gains.pkl"
     with open(pickle_file_name, "wb") as file:
         pkl.dump(results_dict, file)
+
 
 def main(seed_list, condition_to_predict):
     results_dict = {}
@@ -92,6 +100,7 @@ def main(seed_list, condition_to_predict):
         results_dict = append_data(results_dict, model, seed, optim_time, r2, model.y_test, y_pred)
 
     save_data(results_dict, model.name, condition_to_predict, output_path)
+
 
 if __name__ == "__main__":
     conditions_list = ["VIT", "6MWT"]
