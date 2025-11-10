@@ -1,10 +1,6 @@
 from .optimisation_methods import OptimisationMethods
-from sklearn.model_selection import RandomizedSearchCV, KFold, StratifiedKFold, cross_val_score
-from skopt import BayesSearchCV
+from sklearn.model_selection import KFold, cross_val_score
 from bayes_opt import BayesianOptimization
-from sklearn.svm import SVR
-from skopt.space import Real, Integer, Categorical
-from scipy.stats import uniform, randint
 
 
 class OptimisationMethodsLin(OptimisationMethods):
@@ -12,7 +8,7 @@ class OptimisationMethodsLin(OptimisationMethods):
         super().__init__()
 
     @staticmethod
-    def bayesian_optim(model, X, y):
+    def bayesian_optim(model, n_iter):
 
         pbounds = {
             "C": (1, 1000),
@@ -31,15 +27,19 @@ class OptimisationMethodsLin(OptimisationMethods):
                 "degree": int(degree),
                 "kernel": kernel_options[int(kernel)],
             }
-            try_model = model.set_params(**params)
-            cv = KFold(n_splits=5, shuffle=True, random_state=42)
-            scores = cross_val_score(try_model, X, y, cv=cv, scoring="neg_mean_squared_error")
+            try_model = model.model.set_params(**params)
+            cv = KFold(n_splits=5, shuffle=True, random_state=model.random_state_cv)
+            scores = cross_val_score(
+                try_model, model.X_train_scaled, model.y_train, cv=cv, scoring="neg_mean_squared_error", n_jobs=-1
+            )
             return scores.mean()
 
         print("⚙️ Starting Bayesian optimisation...")
 
-        optimizer = BayesianOptimization(f=function_to_min, pbounds=pbounds, random_state=42, verbose=3)
-        optimizer.maximize(init_points=10, n_iter=100)
+        optimizer = BayesianOptimization(
+            f=function_to_min, pbounds=pbounds, random_state=model.random_state_optim, verbose=3
+        )
+        optimizer.maximize(init_points=10, n_iter=n_iter)
         best_params = optimizer.max["params"]
         best_params["degree"] = int(best_params["degree"])  # Convert to int
         best_params["C"] = float(best_params["C"])  # Convert to float
@@ -53,8 +53,8 @@ class OptimisationMethodsLin(OptimisationMethods):
             "epsilon": float(best_params["epsilon"]),
         }
 
-        best_model = model.set_params(**final_params)
-        best_model.fit(X, y)
+        best_model = model.model.set_params(**final_params)
+        best_model.fit(model.X_train_scaled, model.y_train)
 
         class ResultWrapper:
             def __init__(self, model, params):

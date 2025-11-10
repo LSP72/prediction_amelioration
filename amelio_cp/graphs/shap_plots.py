@@ -9,26 +9,26 @@ class SHAPPlots:
         pass
 
     @staticmethod
-    def shap_values_calculation(trained_model):
+    def shap_values_calculation(model_class):
 
         try:
-            check_is_fitted(trained_model.model)
+            check_is_fitted(model_class.model)
         except:
-            raise ValueError("❌ Model is not fitted yet!")
+            raise ValueError("Model is not fitted yet!")
 
-        explainer = shap.KernelExplainer(trained_model.model.predict, trained_model.X_train_scaled)
-        shap_values = explainer.shap_values(trained_model.X_test_scaled)
+        explainer = shap.KernelExplainer(model_class.model.predict, model_class.X_train_scaled)
+        shap_values = explainer.shap_values(model_class.X_test_scaled)
 
         return {"explainer": explainer, "shap_values": shap_values}
 
     @staticmethod
-    def plot_shap_summary(trained_model, features_names: list, output_path: str, show=True):
+    def plot_shap_summary(model_class, features_names: list, output_path: str, show=True):
 
-        shap_values = trained_model.shap_analysis["shap_values"]
+        shap_values = model_class.shap_analysis["shap_values"]
 
         shap.summary_plot(
             shap_values,
-            trained_model.X_test_scaled,
+            model_class.X_test_scaled,
             feature_names=features_names,  # model.feature_keys
             max_display=len(features_names),
             plot_size=(8, 10),
@@ -46,13 +46,13 @@ class SHAPPlots:
         cbar.set_ylabel("Feature value", fontsize=18)  # Adjust the size as needed
         cbar.tick_params(labelsize=18)  # Adjust the size of the ticks (i.e., High/Low)
         plt.title(
-            f"Weight of each feature on the ML's decision making \n(random state = {trained_model.random_state})",
+            f"Weight of each feature on the ML's decision making \n(random state = {model_class.random_state})",
             fontsize=20,
         )
 
         # Saving the figure if a path is provided
         if output_path:
-            plt.savefig(f"{output_path}shap_fig_{trained_model.random_state}.svg", dpi=300, bbox_inches="tight")
+            plt.savefig(f"{output_path}shap_fig_{model_class.random_state}.svg", dpi=300, bbox_inches="tight")
             print(f"SHAP plot saved to: {output_path}")
 
         if show:

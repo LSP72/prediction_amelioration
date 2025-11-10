@@ -1,7 +1,5 @@
 from sklearn.ensemble import RandomForestClassifier
 from .classifier_model import ClassifierModel
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import StandardScaler
 
 
 # %% RFC

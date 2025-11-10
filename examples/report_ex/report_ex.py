@@ -1,0 +1,106 @@
+import pandas as pd
+import pickle as pkl
+from amelio_cp import SVRModel
+from amelio_cp import SVCModel
+from amelio_cp import Process
+import time
+
+
+def build_model(model_name):
+    if model_name == "svc":
+        model = SVCModel()
+        model.random_state = 1
+
+    elif model_name == "svr":
+        model = SVRModel()
+        model.random_state = 1
+    return model
+
+
+def prepare_data(data_path, features_path, condition_to_predict, model_name, samples_to_keep):
+    all_data = Process.load_csv(data_path)
+    if condition_to_predict == "VIT":
+        all_data = all_data.drop(["6MWT_POST"], axis=1)
+        all_data = all_data.dropna()
+        if model_name == "svc":
+            y = Process.calculate_MCID(all_data["VIT_PRE"], all_data["VIT_POST"], "VIT")
+        else:
+            y = all_data["VIT_POST"]
+
+    elif condition_to_predict == "6MWT":
+        all_data = all_data.drop(["VIT_POST"], axis=1)
+        all_data = all_data.dropna()
+        if model_name == "svc":
+            y = Process.calculate_MCID(all_data["6MWT_PRE"], all_data["6MWT_POST"], "6MWT", all_data["GMFCS"])
+        else:
+            y = all_data["6MWT_POST"]
+
+    features = pd.read_excel(features_path)
+    selected_features = features["19"].dropna().to_list()
+
+    X = all_data[selected_features]
+
+    if all(i in X.index for i in samples_to_keep):
+        X_ex, y_ex = X.loc[samples_to_keep], y.loc[samples_to_keep]
+        X.drop(samples_to_keep, inplace=True)
+        y.drop(samples_to_keep, inplace=True)
+    else:
+        missing = [i for i in samples_to_keep if i not in X.index]
+        raise ValueError(f"Some chosen labels are missing:{missing}")
+
+    return X, y, X_ex, y_ex
+
+
+def load_data(model, X, y, X_ex, y_ex):
+    model.add_train_data(X, y)  # not going to evaluate the model, so using all the data for training
+    model.add_test_data(X_ex, y_ex)
+
+
+def save_data(results_dict, model_name, output_path):
+    pickle_file_name = output_path + model_name + ".pkl"
+    with open(pickle_file_name, "wb") as file:
+        pkl.dump(results_dict, file)
+
+
+def main(condition_to_predict, samples_to_keep):
+    results_dict = {}
+    data_path = "datasets/sample_2/all_data_28pp.csv"
+    features_path = "amelio_cp/processing/Features.xlsx"
+    output_path = "examples/results/report_ex/"
+    models = ["svc", "svr"]
+
+    for model_name in models:
+        starting_time = time.time()
+
+        model = build_model(model_name)
+        X, y, X_ex, y_ex = prepare_data(data_path, features_path, condition_to_predict, model_name, samples_to_keep)
+        load_data(model, X, y, X_ex, y_ex)
+
+        model.train_and_tune("bayesian_optim")
+
+        y_pred = model.model.predict(model.X_test_scaled)
+
+        optim_time = time.time() - starting_time
+
+        results_dict[model_name] = {
+            "C": model.best_params["C"],
+            "gamma": model.best_params["gamma"],
+            "degree": model.best_params["degree"],
+            "kernel": model.best_params["kernel"],
+            "prediction": y_pred,
+            "optim_time": optim_time,
+            "samples_kept": samples_to_keep,
+            "GMFCS_levels": X_ex["GMFCS"],
+        }
+
+        if model_name == "svr":
+            diff = y_pred - X_ex[condition_to_predict + "_PRE"]
+            results_dict[model_name]["pre_post_diff"] = diff
+
+    save_data(results_dict, condition_to_predict, output_path)
+
+
+if __name__ == "__main__":
+    samples_to_keep = [9, 55]  # will remove the data 20 [0 but neg] and 44 [1]
+    main("VIT", samples_to_keep)
+    main("6MWT", samples_to_keep)

@@ -1,7 +1,5 @@
 from sklearn.svm import SVC
 from .classifier_model import ClassifierModel
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import StandardScaler
 from scipy.stats import uniform
 
 

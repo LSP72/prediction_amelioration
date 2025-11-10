@@ -1,5 +1,4 @@
 from sklearn.ensemble import RandomForestRegressor
-from sklearn.pipeline import Pipeline
 from scipy.stats import randint
 from .linear_model import LinearModel
 
