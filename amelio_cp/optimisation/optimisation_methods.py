@@ -125,7 +125,6 @@ class OptimisationMethods:
 
         return search
 
-    # TODO: being able to change the n_iter before
     @staticmethod
     def bayesian_optim(model, n_iter):
 
@@ -134,17 +133,17 @@ class OptimisationMethods:
             "C": (1, 1000),
             "gamma": (0.001, 1),
             "degree": (2, 5),
-            # "kernel": (0, 2),  # 0: 'linear', 1: 'poly', 2: 'rbf'
+            "kernel": (0, 2),  # 0: 'linear', 1: 'poly', 2: 'rbf'
         }
         kernel_options = ["linear", "poly", "rbf"]
 
-        def function_to_min(C, gamma, degree):
+        def function_to_min(C, gamma, degree, kernel):
             """
             This function updates the model with the given hyperparameters,
             performs cross-validation, and returns the mean accuracy (to be maximized).
             """
 
-            params = {"C": C, "gamma": gamma, "degree": int(degree), "kernel": "rbf"}
+            params = {"C": C, "gamma": gamma, "degree": int(degree), "kernel": kernel_options[int(kernel)]}
             model_to_optim = model.model.set_params(**params)
             cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=model.random_state_cv)
             scores = cross_val_score(
@@ -159,7 +158,7 @@ class OptimisationMethods:
         best_params = optimizer.max["params"]
         best_params["degree"] = int(best_params["degree"])  # Convert to int
         best_params["C"] = float(best_params["C"])  # Convert to float
-        best_params["kernel"] = "rbf"
+        best_params["kernel"] = kernel_options[int(best_params["kernel"])]
 
         final_params = {
             "C": float(best_params["C"]),

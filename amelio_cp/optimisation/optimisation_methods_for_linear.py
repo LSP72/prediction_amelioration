@@ -25,11 +25,10 @@ class OptimisationMethodsLin(OptimisationMethods):
                 "gamma": gamma,
                 "epsilon": epsilon,
                 "degree": int(degree),
-                #TODO: what to do woth kernel optimisation?
                 "kernel": kernel_options[int(kernel)],
             }
             try_model = model.model.set_params(**params)
-            cv = KFold(n_splits=5, shuffle=True, random_state=42)
+            cv = KFold(n_splits=5, shuffle=True, random_state=model.random_state_cv)
             scores = cross_val_score(try_model, model.X_train_scaled, model.y_train, cv=cv, scoring="neg_mean_squared_error", n_jobs=-1)
             return scores.mean()
 

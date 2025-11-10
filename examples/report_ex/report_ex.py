@@ -101,6 +101,6 @@ def main(condition_to_predict, samples_to_keep):
 
 
 if __name__ == "__main__":
-    samples_to_keep = [20, 44]  # will remove the data 20 [0 but neg] and 44 [1]
+    samples_to_keep = [9, 55]  # will remove the data 20 [0 but neg] and 44 [1]
     main("VIT", samples_to_keep)
     main("6MWT", samples_to_keep)
